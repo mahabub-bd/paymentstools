@@ -1,0 +1,366 @@
+import CryptoJS from 'crypto-js';
+import { useCallback, useState } from 'react';
+
+interface VisaPVVResult {
+  pan: string;
+  pin: string;
+  pinLength: number;
+  pvk: string;
+  pvkIndex: string;
+  tsp: string;
+  encryptedResult: string;
+  decimalized: string;
+  pvv: string;
+}
+
+const VisaPVV = ({ className = '' }: { className?: string }) => {
+  const [pan, setPan] = useState('');
+  const [pin, setPin] = useState('');
+  const [pvk, setPvk] = useState('');
+  const [pvkIndex, setPvkIndex] = useState('');
+  const [result, setResult] = useState<VisaPVVResult | null>(null);
+  const [error, setError] = useState('');
+  const [showDetails, setShowDetails] = useState(false);
+
+  // Visa PVV Calculation
+  const calculateVisaPVV = useCallback(() => {
+    try {
+      setError('');
+      setResult(null);
+      setShowDetails(false);
+
+      // Validate and clean inputs
+      const cleanPan = pan.replace(/\s/g, '');
+      const cleanPin = pin.replace(/\s/g, '');
+      const cleanPvk = pvk.replace(/\s/g, '').toUpperCase();
+      const cleanPvkIndex = pvkIndex.replace(/\s/g, '').toUpperCase();
+
+      if (!cleanPan || cleanPan.length < 13 || cleanPan.length > 19) {
+        throw new Error('Invalid PAN (must be 13-19 digits)');
+      }
+      if (!/^\d+$/.test(cleanPan)) {
+        throw new Error('PAN must contain only digits');
+      }
+      if (!cleanPin || cleanPin.length < 4 || cleanPin.length > 12) {
+        throw new Error('PIN must be 4-12 digits');
+      }
+      if (!cleanPvk || cleanPvk.length !== 32) {
+        throw new Error('PVK must be 32 hex characters');
+      }
+      if (!/^[0-9A-F]+$/.test(cleanPvk)) {
+        throw new Error('PVK must contain only hex characters (0-9, A-F)');
+      }
+      if (!cleanPvkIndex || cleanPvkIndex.length !== 6) {
+        throw new Error('PVK Index must be 6 hex characters');
+      }
+      if (!/^[0-9A-F]+$/.test(cleanPvkIndex)) {
+        throw new Error('PVK Index must contain only hex characters (0-9, A-F)');
+      }
+
+      // Step 1: Build Transformed Security Parameter (TSP)
+      // Format: PVKI (2 hex digits from last 2 of index) + PIN length (2 digits) + PIN + 11 rightmost PAN digits (no check digit)
+      const pvki = cleanPvkIndex.substring(4); // Last 2 digits of PVK index
+      const pinLenStr = cleanPin.length.toString().padStart(2, '0'); // 2 digits
+      const panWithoutCheck = cleanPan.slice(0, -1); // Remove check digit
+      const panRight11 = panWithoutCheck.slice(-11).padStart(11, '0'); // Rightmost 11 digits
+
+      // Build TSP (64 bits / 16 nibbles)
+      const tspData = pvki + pinLenStr + cleanPin + panRight11;
+      const tspHex = tspData.padEnd(16, 'F').substring(0, 16); // 16 nibbles, pad with F
+
+      // Step 2: Encrypt TSP with PVK using Triple DES (2-key) in ECB mode
+      const tspDataForEncrypt = CryptoJS.enc.Hex.parse(tspHex);
+      const pvkKey = CryptoJS.enc.Hex.parse(cleanPvk);
+
+      const encrypted = CryptoJS.TripleDES.encrypt(tspDataForEncrypt, pvkKey, {
+        mode: CryptoJS.mode.ECB,
+        padding: CryptoJS.pad.NoPadding
+      });
+
+      const encryptedResult = encrypted.ciphertext.toString(CryptoJS.enc.Hex).toUpperCase();
+
+      // Step 3: Decimalize the encrypted result
+      // Decimalization table: 0-9 map to 0-9, A-F map to 0-5
+      const decimalize = (hex: string): string => {
+        const table: Record<string, string> = {
+          '0': '0', '1': '1', '2': '2', '3': '3', '4': '4',
+          '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
+          'A': '0', 'B': '1', 'C': '2', 'D': '3', 'E': '4', 'F': '5'
+        };
+        return hex.split('').map(c => table[c] || '0').join('');
+      };
+
+      const decimalized = decimalize(encryptedResult);
+
+      // Step 4: Extract first 4 digits as PVV
+      const pvvDigits = decimalized.substring(0, 4);
+
+      setResult({
+        pan: cleanPan,
+        pin: '•'.repeat(cleanPin.length),
+        pinLength: cleanPin.length,
+        pvk: cleanPvk,
+        pvkIndex: cleanPvkIndex,
+        tsp: tspHex,
+        encryptedResult,
+        decimalized,
+        pvv: pvvDigits,
+      });
+    } catch (err) {
+      setError((err as Error).message);
+      setResult(null);
+    }
+  }, [pan, pin, pvk, pvkIndex]);
+
+  const handleLoadExample = useCallback(() => {
+    setPan('4929740000000003');
+    setPin('1234');
+    setPvk('0123456789ABCDEF0123456789ABCDEF');
+    setPvkIndex('000001');
+    setResult(null);
+    setError('');
+    setShowDetails(false);
+  }, []);
+
+  const handleClear = useCallback(() => {
+    setPan('');
+    setPin('');
+    setPvk('');
+    setPvkIndex('');
+    setResult(null);
+    setError('');
+    setShowDetails(false);
+  }, []);
+
+  const formatPan = (value) => {
+    const cleaned = value.replace(/\s/g, '').replace(/\D/g, '');
+    return cleaned.replace(/(.{4})/g, '$1 ').trim();
+  };
+
+  const formatPvk = (value) => {
+    const cleaned = value.replace(/\s/g, '').toUpperCase();
+    return cleaned.replace(/(.{8})/g, '$1 ').trim();
+  };
+
+  const formatHex = (hex) => {
+    return hex.replace(/(.{2})/g, '0x$1 ').trim();
+  };
+
+  return (
+    <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-6 ${className}`}>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+          Visa PVV Calculator
+        </h1>
+        <p className="text-slate-600 dark:text-slate-400 text-sm">
+          Calculate Visa PIN Verification Value (PVV) using PVK
+        </p>
+      </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            {error}
+          </p>
+        </div>
+      )}
+
+      {/* Input Form */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Left Column - Inputs */}
+        <div className="space-y-4">
+          {/* PAN Input */}
+          <div>
+            <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
+              PAN (Card Number)
+            </label>
+            <input
+              type="text"
+              value={pan}
+              onChange={(e) => setPan(formatPan(e.target.value))}
+              placeholder="4929 7400 0000 0003"
+              maxLength={19}
+              className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
+            />
+          </div>
+
+          {/* PIN Input */}
+          <div>
+            <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
+              PIN
+            </label>
+            <input
+              type="password"
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+              placeholder="••••"
+              maxLength={12}
+              className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
+            />
+          </div>
+
+          {/* PVK Input */}
+          <div>
+            <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
+              PVK (32 hex characters)
+            </label>
+            <input
+              type="text"
+              value={pvk}
+              onChange={(e) => setPvk(formatPvk(e.target.value))}
+              placeholder="01234567 89ABCDEF 01234567 89ABCDEF"
+              maxLength={35}
+              className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-xs tracking-wider bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
+            />
+          </div>
+
+          {/* PVK Index Input */}
+          <div>
+            <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
+              PVK Index (6 hex characters)
+            </label>
+            <input
+              type="text"
+              value={pvkIndex}
+              onChange={(e) => setPvkIndex(e.target.value.replace(/\s/g, '').toUpperCase())}
+              placeholder="000001"
+              maxLength={6}
+              className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
+            />
+          </div>
+        </div>
+
+        {/* Right Column - Result */}
+        <div className="space-y-4">
+          {result ? (
+            <>
+              {/* PVV Result - Main Result */}
+              <div className="p-4 bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 border-2 border-purple-300 dark:border-purple-700 rounded-lg">
+                <label className="block text-purple-700 dark:text-purple-300 text-sm font-medium mb-2">
+                  PVV (PIN Verification Value)
+                </label>
+                <div className="font-mono text-3xl font-bold text-purple-600 dark:text-purple-400 tracking-wider">
+                  {result.pvv}
+                </div>
+              </div>
+
+              {/* TSP */}
+              <div className="p-4 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg">
+                <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
+                  Transformed Security Parameter (TSP)
+                </label>
+                <div className="font-mono text-sm text-slate-600 dark:text-slate-400 break-all tracking-wider">
+                  {result.tsp}
+                </div>
+              </div>
+
+              {/* Encrypted Result */}
+              <div className="p-4 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg">
+                <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
+                  Encrypted Result (Hex)
+                </label>
+                <div className="font-mono text-sm text-slate-600 dark:text-slate-400 break-all tracking-wider">
+                  {result.encryptedResult}
+                </div>
+              </div>
+
+              {/* Toggle Details */}
+              <button
+                onClick={() => setShowDetails(!showDetails)}
+                className="w-full px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-zinc-800 rounded-lg hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors"
+              >
+                {showDetails ? '▼ Hide' : '▶ Show'} Calculation Details
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-full min-h-[250px] border-2 border-dashed border-slate-300 dark:border-zinc-700 rounded-lg">
+              <div className="text-center text-slate-400 dark:text-zinc-500">
+                <svg className="mx-auto h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                <p className="text-sm">Enter values and click Calculate</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Calculation Details */}
+      {result && showDetails && (
+        <div className="mb-6 p-4 bg-slate-900 dark:bg-black border border-slate-700 dark:border-zinc-800 rounded-lg">
+          <h3 className="text-sm font-bold text-slate-300 dark:text-slate-200 mb-4">Visa PVV Calculation Process:</h3>
+
+          <div className="space-y-4 text-xs">
+            {/* Step 1: Build TSP */}
+            <div>
+              <p className="text-cyan-400 font-semibold mb-1">Step 1: Build Transformed Security Parameter (TSP)</p>
+              <div className="font-mono text-slate-400 space-y-1">
+                <div>Format: PVKI (2) + PIN Length (2) + PIN + 11 rightmost PAN digits</div>
+                <div>PVVKI: <span className="text-yellow-400">{result.pvkIndex.substring(4)}</span></div>
+                <div>PIN Length: <span className="text-yellow-400">{result.pinLength} digits</span></div>
+                <div>TSP: <span className="text-green-400">{formatHex(result.tsp)}</span></div>
+              </div>
+            </div>
+
+            {/* Step 2: Encrypt */}
+            <div>
+              <p className="text-cyan-400 font-semibold mb-1">Step 2: Encrypt TSP with PVK (Triple DES ECB)</p>
+              <div className="font-mono text-slate-400 space-y-1">
+                <div>TSP: <span className="text-white">{result.tsp}</span></div>
+                <div>PVK: <span className="text-white">{result.pvk.substring(0, 16)}...</span></div>
+                <div className="text-green-500 font-bold">Result: {result.encryptedResult}</div>
+              </div>
+            </div>
+
+            {/* Step 3: Decimalize */}
+            <div>
+              <p className="text-cyan-400 font-semibold mb-1">Step 3: Decimalize (A-F → 0-5)</p>
+              <div className="font-mono text-slate-400 space-y-1">
+                <div>Encrypted: <span className="text-white">{result.encryptedResult}</span></div>
+                <div className="text-green-400">Decimalized: {result.decimalized}</div>
+              </div>
+            </div>
+
+            {/* Step 4: Extract PVV */}
+            <div>
+              <p className="text-cyan-400 font-semibold mb-1">Step 4: Extract PVV (First 4 decimal digits)</p>
+              <div className="font-mono text-slate-400 space-y-1">
+                <div>Decimalized: <span className="text-white">{result.decimalized}</span></div>
+                <div>PVV: <span className="text-purple-400 font-bold">{result.pvv}</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex gap-3">
+        <button
+          onClick={calculateVisaPVV}
+          className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors"
+        >
+          Calculate PVV
+        </button>
+        <button
+          onClick={handleLoadExample}
+          className="px-4 py-2 bg-white dark:bg-zinc-900 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-zinc-700 rounded-md hover:bg-slate-50 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors"
+        >
+          Load Example
+        </button>
+        <button
+          onClick={handleClear}
+          className="px-4 py-2 bg-white dark:bg-zinc-900 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-zinc-700 rounded-md hover:bg-slate-50 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors"
+        >
+          Clear
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default VisaPVV;

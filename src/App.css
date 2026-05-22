@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  /* Light mode colors */
+  --color-background: #ffffff;
+  --color-background-alt: #f8fafc;
+  --color-background-card: #ffffff;
+  --color-foreground: #0f172a;
+  --color-foreground-muted: #64748b;
+  --color-border: #e2e8f0;
+
+  /* Dark mode colors */
+  --color-background-dark: #000000;
+  --color-background-alt-dark: #0a0a0a;
+  --color-background-card-dark: #0a0a0a;
+  --color-foreground-dark: #ffffff;
+  --color-foreground-muted-dark: #94a3b8;
+  --color-border-dark: rgba(255, 255, 255, 0.1);
+}
+
+/* Define dark mode variant */
+@variant dark (.dark &);
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+html.dark body {
+  background-color: var(--color-background-dark);
+  color: var(--color-foreground-dark);
+}
