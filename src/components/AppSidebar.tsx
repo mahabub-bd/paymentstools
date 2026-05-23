@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 interface MenuItem {
   id: string;
   label: string;
@@ -45,41 +47,73 @@ export const AppSidebar = ({
   onShowShortcuts,
   darkMode,
 }: AppSidebarProps) => {
+  const totalVisibleTools = Object.values(groupedMenuItems).reduce((sum, items) => sum + items.length, 0);
+  const activeCategoryId = Object.values(groupedMenuItems)
+    .flat()
+    .find(item => item.id === activeMenu)?.category;
+
+  const categoryAccent: Record<string, string> = {
+    blue: 'bg-blue-500',
+    green: 'bg-emerald-500',
+    purple: 'bg-violet-500',
+    amber: 'bg-amber-500',
+    slate: 'bg-slate-500',
+  };
+
+  const categoryText: Record<string, string> = {
+    blue: 'text-blue-700 dark:text-blue-300',
+    green: 'text-emerald-700 dark:text-emerald-300',
+    purple: 'text-violet-700 dark:text-violet-300',
+    amber: 'text-amber-700 dark:text-amber-300',
+    slate: 'text-slate-700 dark:text-slate-300',
+  };
+
   return (
     <aside
-      className={`${isOpen ? 'w-72' : 'w-16'} bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-zinc-800/50 transition-all duration-500 ease-in-out flex flex-col shadow-lg`}
+      className={`${isOpen ? 'w-80' : 'w-16'} bg-white dark:bg-zinc-950 border-r border-slate-200 dark:border-zinc-800 transition-all duration-300 ease-in-out flex flex-col shadow-sm`}
     >
       {/* Sidebar Header */}
-      <div className="p-4 border-b border-slate-200/50 dark:border-zinc-800/50">
+      <div className="p-3 border-b border-slate-200 dark:border-zinc-800">
         <div className="flex items-center justify-between">
-          {isOpen && (
-            <div className="flex items-center gap-3 animate-fade-in-left">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 animate-bounce-slow">
+          <Link
+            to="/"
+            className={`flex items-center gap-3 rounded-md hover:bg-slate-50 dark:hover:bg-zinc-900 transition-colors ${!isOpen ? 'mx-auto' : ''}`}
+            title="Go to home"
+          >
+            {isOpen ? (
+              <>
+                <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+                  <span className="text-white text-sm font-bold">PT</span>
+                </div>
+                <div>
+                  <h1 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
+                    Payment Tools
+                  </h1>
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-500">{totalVisibleTools} tools available</p>
+                </div>
+              </>
+            ) : (
+              <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
                 <span className="text-white text-sm font-bold">PT</span>
               </div>
-              <div>
-                <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-tight">
-                  Payment Tools
-                </h1>
-                <p className="text-[10px] text-slate-500 dark:text-zinc-500">ISO 8583 & EMV Utilities</p>
-              </div>
-            </div>
-          )}
+            )}
+          </Link>
           <button
             onClick={onToggle}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all duration-300 hover:rotate-180"
+            className={`p-2 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors`}
             aria-label="Toggle sidebar"
             title="Toggle sidebar ([)"
           >
-            <svg className="w-5 h-5 text-slate-600 dark:text-slate-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            <svg className={`w-5 h-5 text-slate-600 dark:text-slate-400 transition-transform duration-300 ${!isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
         </div>
 
         {/* Search Bar */}
         {isOpen && (
-          <div className="mt-4 relative animate-fade-in">
+          <div className="mt-3">
+            <div className="relative">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
@@ -88,33 +122,56 @@ export const AppSidebar = ({
               placeholder="Search tools..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-100 dark:bg-zinc-800 border-0 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:text-slate-200 placeholder:text-slate-400 transition-all duration-300 focus:scale-105"
+              className="w-full pl-9 pr-8 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-200 placeholder:text-slate-400"
             />
+              {searchQuery && (
+                <button
+                  onClick={() => onSearchChange('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-400"
+                  title="Clear search"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+            {searchQuery && (
+              <p className="mt-1 text-[11px] text-slate-500 dark:text-zinc-500">
+                {totalVisibleTools} result{totalVisibleTools === 1 ? '' : 's'}
+              </p>
+            )}
           </div>
         )}
       </div>
 
       {/* Navigation Menu */}
-      <nav className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+      <nav className="flex-1 overflow-y-auto p-2 custom-scrollbar">
         {Object.entries(toolCategories).map(([catId, category], catIndex) => {
           const items = groupedMenuItems[catId];
           if (!items || items.length === 0) return null;
 
           const isCollapsed = collapsedCategories.has(catId);
+          const isActiveCategory = activeCategoryId === catId;
+          const accent = categoryAccent[category.color] || categoryAccent.slate;
+          const textColor = categoryText[category.color] || categoryText.slate;
 
           return (
-            <div key={catId} className="mb-2 animate-slide-in" style={{ animationDelay: `${Number(catIndex) * 50}ms` }}>
+            <div key={catId} className="mb-2">
               <button
                 onClick={() => onToggleCategory(catId)}
-                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all duration-300 ${
-                  isOpen ? 'hover:bg-slate-100 dark:hover:bg-zinc-800' : 'justify-center'
+                className={`w-full flex items-center gap-2 px-2 py-2 rounded-md transition-colors ${
+                  isOpen ? 'hover:bg-slate-50 dark:hover:bg-zinc-900' : 'justify-center'
                 }`}
+                title={category.label}
               >
-                <span className="text-lg animate-float" style={{ animationDelay: `${catIndex * 100}ms` }}>{category.icon}</span>
+                <span className={`w-1.5 h-5 rounded-full ${isActiveCategory ? accent : 'bg-slate-200 dark:bg-zinc-800'} ${!isOpen ? 'hidden' : ''}`} />
+                <span className="text-base">{category.icon}</span>
                 {isOpen && (
                   <>
-                    <span className="text-xs font-semibold text-slate-500 dark:text-zinc-500 uppercase tracking-wider flex-1 text-left">
+                    <span className={`text-[11px] font-bold uppercase tracking-wide flex-1 text-left ${isActiveCategory ? textColor : 'text-slate-500 dark:text-zinc-500'}`}>
                       {category.label}
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400">
+                      {items.length}
                     </span>
                     <svg className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isCollapsed ? '-rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -123,28 +180,38 @@ export const AppSidebar = ({
                 )}
               </button>
 
-              {!isCollapsed && items.map((item, itemIndex) => (
+              {!isCollapsed && items.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => onMenuChange(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group ${
+                  className={`relative w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors group ${
                     activeMenu === item.id
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-105'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-slate-200 hover:scale-102 hover:translate-x-1'
+                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-200'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-900 dark:hover:text-slate-100'
                   }`}
                   title={`${item.label} (${item.shortcut})`}
-                  style={{ animationDelay: `${(catIndex * 50) + (itemIndex * 25)}ms` }}
                 >
-                  <span className="text-xl transition-transform duration-300 group-hover:rotate-12">{item.icon}</span>
+                  {activeMenu === item.id && (
+                    <span className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full ${accent}`} />
+                  )}
+                  <span className={`w-8 h-8 rounded-md flex items-center justify-center text-base ${
+                    activeMenu === item.id ? 'bg-white dark:bg-zinc-900 shadow-sm' : 'bg-slate-100 dark:bg-zinc-900'
+                  }`}>
+                    {item.icon}
+                  </span>
                   {isOpen && (
-                    <div className="flex-1 text-left">
+                    <div className="flex-1 text-left min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-sm">{item.label}</span>
-                        <kbd className="hidden group-hover:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono rounded bg-slate-200 dark:bg-zinc-700 text-slate-600 dark:text-slate-400 animate-scale-in">
+                        <span className="font-semibold text-sm truncate">{item.label}</span>
+                        <kbd className={`ml-2 inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono rounded ${
+                          activeMenu === item.id
+                            ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
+                            : 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400'
+                        }`}>
                           {item.shortcut}
                         </kbd>
                       </div>
-                      <p className={`text-[10px] truncate transition-opacity duration-300 ${activeMenu === item.id ? 'text-blue-100' : 'text-slate-400 dark:text-zinc-500'}`}>
+                      <p className="text-[11px] truncate text-slate-400 dark:text-zinc-500">
                         {item.description}
                       </p>
                     </div>
@@ -157,42 +224,42 @@ export const AppSidebar = ({
       </nav>
 
       {/* Sidebar Footer */}
-      <div className="p-4 border-t border-slate-200/50 dark:border-zinc-800/50 space-y-2">
+      <div className="p-3 border-t border-slate-200 dark:border-zinc-800 space-y-2">
         {/* Keyboard Shortcuts Button */}
         <button
           onClick={onShowShortcuts}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:scale-105 ${
+          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-900 ${
             !isOpen && 'justify-center'
           }`}
           title="Keyboard shortcuts (?)"
         >
-          <span className="text-xl animate-pulse-slow">⌨️</span>
-          {isOpen && <span className="text-sm">Shortcuts</span>}
+          <span className="text-base">⌨️</span>
+          {isOpen && <span className="text-sm font-medium">Shortcuts</span>}
         </button>
 
         {/* Dark Mode Toggle */}
         <button
           onClick={onToggleDarkMode}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-500 ${
+          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
             darkMode
-              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg scale-105'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:scale-105'
+              ? 'bg-zinc-800 text-white'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-900'
           } ${!isOpen && 'justify-center'}`}
           title="Toggle dark mode"
         >
-          <span className={`text-xl transition-transform duration-500 ${darkMode ? 'animate-spin-slow' : ''}`}>{darkMode ? '🌙' : '☀️'}</span>
+          <span className="text-base">{darkMode ? '🌙' : '☀️'}</span>
           {isOpen && <span className="text-sm font-medium">{darkMode ? 'Dark Mode' : 'Light Mode'}</span>}
         </button>
 
         {/* Version Info */}
         {isOpen && (
-          <div className="flex items-center justify-between pt-2 animate-fade-in">
+          <div className="flex items-center justify-between pt-2">
             <p className="text-[10px] text-slate-400 dark:text-zinc-600">v1.0.0</p>
             <a
               href="https://github.com/mahabub-bd/paymentstools"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors hover:scale-110 inline-block"
+              className="text-[10px] text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
             >
               GitHub
             </a>

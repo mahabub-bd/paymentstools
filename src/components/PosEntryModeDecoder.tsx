@@ -97,6 +97,8 @@ const decodePosEntryMode = (code: string) => {
 const PosEntryModeDecoder = ({ className = '' }) => {
   const [input, setInput] = useState('');
   const [decoded, setDecoded] = useState<ReturnType<typeof decodePosEntryMode> | null>(null);
+  const [activeTab, setActiveTab] = useState<'common' | 'card' | 'pin'>('common');
+  const [referenceSearch, setReferenceSearch] = useState('');
 
   const handleDecode = useCallback(() => {
     if (!input.trim()) {
@@ -251,7 +253,7 @@ const PosEntryModeDecoder = ({ className = '' }) => {
             <div className="flex gap-2">
               <div className="flex-[2] text-center">
                 <div className="bg-white dark:bg-black border-2 border-blue-500 rounded-lg p-3">
-                  <span className="font-mono text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  <span className="font-mono text-lg font-bold text-blue-600 dark:text-blue-400">
                     {input.padStart(3, '0').slice(0, 2)}
                   </span>
                 </div>
@@ -259,7 +261,7 @@ const PosEntryModeDecoder = ({ className = '' }) => {
               </div>
               <div className="flex-1 text-center">
                 <div className="bg-white dark:bg-black border-2 border-blue-500 rounded-lg p-3">
-                  <span className="font-mono text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  <span className="font-mono text-lg font-bold text-blue-600 dark:text-blue-400">
                     {input.padStart(3, '0')[2]}
                   </span>
                 </div>
@@ -270,86 +272,169 @@ const PosEntryModeDecoder = ({ className = '' }) => {
         </div>
       )}
 
-      {/* Reference Table */}
-      <details className="mt-6 group" open>
-        <summary className="text-sm font-semibold text-slate-700 dark:text-slate-300 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 mb-3 flex items-center gap-2">
-          <span>Reference Tables</span>
-          <span className="text-xs text-slate-400">(click to expand/collapse)</span>
-        </summary>
-
-        <div className="space-y-4 mt-4">
-          {/* Card Entry Mode Table */}
-          <div className="overflow-x-auto">
-            <h4 className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">
-              Card Entry Mode Codes (Positions 1-2)
-            </h4>
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-zinc-800">
-                  <th className="text-left py-2 px-2 text-slate-600 dark:text-slate-400">Code</th>
-                  <th className="text-left py-2 px-2 text-slate-600 dark:text-slate-400">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(CARD_ENTRY_MODES).map(([code, desc]) => (
-                  <tr key={code} className="border-b border-slate-100 dark:border-zinc-900">
-                    <td className="py-1.5 px-2 font-mono font-bold text-blue-600 dark:text-blue-400">{code}</td>
-                    <td className="py-1.5 px-2 text-slate-700 dark:text-slate-300">{desc}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Reference Tables */}
+      <div className="mt-6 border border-slate-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+        {/* Header with Search */}
+        <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-zinc-900 dark:to-zinc-900/50 px-4 py-3 border-b border-slate-200 dark:border-zinc-800">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <span className="text-lg">📖</span>
+              Reference Tables
+            </h3>
+            <span className="text-xs text-slate-500 dark:text-zinc-500">
+              {Object.keys(CARD_ENTRY_MODES).length + Object.keys(PIN_CAPABILITY).length + Object.keys(POS_ENTRY_CODES).length} total codes
+            </span>
           </div>
-
-          {/* PIN Capability Table */}
-          <div className="overflow-x-auto">
-            <h4 className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">
-              PIN Entry Capability (Position 3)
-            </h4>
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-zinc-800">
-                  <th className="text-left py-2 px-2 text-slate-600 dark:text-slate-400">Code</th>
-                  <th className="text-left py-2 px-2 text-slate-600 dark:text-slate-400">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(PIN_CAPABILITY).map(([code, desc]) => (
-                  <tr key={code} className="border-b border-slate-100 dark:border-zinc-900">
-                    <td className="py-1.5 px-2 font-mono font-bold text-blue-600 dark:text-blue-400">{code}</td>
-                    <td className="py-1.5 px-2 text-slate-700 dark:text-slate-300">{desc}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Common 3-Digit Codes Table */}
-          <div className="overflow-x-auto">
-            <h4 className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">
-              Common DE 22 Values
-            </h4>
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-zinc-800">
-                  <th className="text-left py-2 px-2 text-slate-600 dark:text-slate-400">Code</th>
-                  <th className="text-left py-2 px-2 text-slate-600 dark:text-slate-400">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(POS_ENTRY_CODES)
-                  .sort(([a], [b]) => a.localeCompare(b))
-                  .map(([code, desc]) => (
-                    <tr key={code} className="border-b border-slate-100 dark:border-zinc-900">
-                      <td className="py-1.5 px-2 font-mono font-bold text-blue-600 dark:text-blue-400">{code}</td>
-                      <td className="py-1.5 px-2 text-slate-700 dark:text-slate-300">{desc}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
+          <input
+            type="text"
+            value={referenceSearch}
+            onChange={(e) => setReferenceSearch(e.target.value)}
+            placeholder="Search codes or descriptions..."
+            className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+          />
         </div>
-      </details>
+
+        {/* Tabs */}
+        <div className="flex border-b border-slate-200 dark:border-zinc-800 bg-white dark:bg-black">
+          <button
+            onClick={() => setActiveTab('common')}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+              activeTab === 'common'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-zinc-900'
+            }`}
+          >
+            Common Codes
+            <span className="ml-2 px-2 py-0.5 text-xs bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 rounded-full">
+              {Object.keys(POS_ENTRY_CODES).length}
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab('card')}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+              activeTab === 'card'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-zinc-900'
+            }`}
+          >
+            Card Entry Modes
+            <span className="ml-2 px-2 py-0.5 text-xs bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 rounded-full">
+              {Object.keys(CARD_ENTRY_MODES).length}
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab('pin')}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+              activeTab === 'pin'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-zinc-900'
+            }`}
+          >
+            PIN Capability
+            <span className="ml-2 px-2 py-0.5 text-xs bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 rounded-full">
+              {Object.keys(PIN_CAPABILITY).length}
+            </span>
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        <div className="max-h-80 overflow-y-auto">
+          {activeTab === 'common' && (
+            <div className="divide-y divide-slate-100 dark:divide-zinc-900">
+              {Object.entries(POS_ENTRY_CODES)
+                .filter(([code, desc]) =>
+                  !referenceSearch ||
+                  code.includes(referenceSearch) ||
+                  desc.toLowerCase().includes(referenceSearch.toLowerCase())
+                )
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([code, desc]) => {
+                  const entryCode = code.slice(0, 2);
+                  const colorClass = getEntryModeColor(entryCode);
+                  return (
+                    <div
+                      key={code}
+                      className={`px-4 py-3 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors ${code === input ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className={`px-2 py-1 rounded font-mono text-sm font-bold ${colorClass}`}>
+                            {code}
+                          </span>
+                          <span className="text-sm text-slate-700 dark:text-slate-300">{desc}</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setInput(code);
+                            setDecoded(decodePosEntryMode(code));
+                          }}
+                          className="px-3 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-md transition-colors"
+                        >
+                          Use
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+
+          {activeTab === 'card' && (
+            <div className="divide-y divide-slate-100 dark:divide-zinc-900">
+              {Object.entries(CARD_ENTRY_MODES)
+                .filter(([code, desc]) =>
+                  !referenceSearch ||
+                  code.includes(referenceSearch) ||
+                  desc.toLowerCase().includes(referenceSearch.toLowerCase())
+                )
+                .map(([code, desc]) => {
+                  const colorClass = getEntryModeColor(code);
+                  return (
+                    <div
+                      key={code}
+                      className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className={`px-2 py-1 rounded font-mono text-sm font-bold ${colorClass}`}>
+                            {code}
+                          </span>
+                          <span className="text-sm text-slate-700 dark:text-slate-300">{desc}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+
+          {activeTab === 'pin' && (
+            <div className="divide-y divide-slate-100 dark:divide-zinc-900">
+              {Object.entries(PIN_CAPABILITY)
+                .filter(([code, desc]) =>
+                  !referenceSearch ||
+                  code.includes(referenceSearch) ||
+                  desc.toLowerCase().includes(referenceSearch.toLowerCase())
+                )
+                .map(([code, desc]) => (
+                  <div
+                    key={code}
+                    className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="px-2 py-1 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 font-mono text-sm font-bold">
+                          {code}
+                        </span>
+                        <span className="text-sm text-slate-700 dark:text-slate-300">{desc}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

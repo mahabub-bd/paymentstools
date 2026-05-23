@@ -421,19 +421,7 @@ const IsoBitmapEditor = ({ className = '' }) => {
 
       {/* Input Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div>
-          <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
-            Binary Bitmap
-          </label>
-          <input
-            type="text"
-            value={currentBitmap}
-            onChange={handleInputChange}
-            placeholder="Enter 64-bit binary string"
-            className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
-            maxLength={64}
-          />
-        </div>
+
         <div>
           <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
             Hexadecimal Bitmap
@@ -445,6 +433,19 @@ const IsoBitmapEditor = ({ className = '' }) => {
             placeholder="Enter 16-digit hex string"
             className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
             maxLength={35}
+          />
+        </div>
+        <div>
+          <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
+            Binary Bitmap
+          </label>
+          <input
+            type="text"
+            value={currentBitmap}
+            onChange={handleInputChange}
+            placeholder="Enter 64-bit binary string"
+            className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
+            maxLength={64}
           />
         </div>
       </div>

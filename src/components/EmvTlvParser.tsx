@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { hexToAscii, parseEMVTLV, getEMVTagDefinition } from '../utils/iso8583VersionParser/emv-tlv';
 
 // Common EMV tag definitions
 const EMV_TAGS = {
@@ -123,84 +124,59 @@ const EmvTlvParser = ({ className = '' }) => {
       throw new Error('Hex string must have even length');
     }
 
-    const items = [];
-    let pos = 0;
-
-    while (pos < cleanHex.length) {
-      const startIndex = pos;
-
-      // Parse tag
-      let tag = '';
-      let tagByte = cleanHex.slice(pos, pos + 2);
-      pos += 2;
-
-      tag += tagByte;
-
-      // Check if this is a multi-byte tag (bit 8 of first byte is set)
-      if ((parseInt(tagByte, 16) & 0x1F) === 0x1F) {
-        // More bytes follow
-        let moreBytes = true;
-        while (moreBytes && pos < cleanHex.length) {
-          const nextByte = cleanHex.slice(pos, pos + 2);
-          tag += nextByte;
-          pos += 2;
-          moreBytes = (parseInt(nextByte, 16) & 0x80) !== 0;
+    // Helper to check if raw hex bytes are all printable ASCII (0x20-0x7E)
+    const isAllPrintableHex = (hex: string): boolean => {
+      for (let i = 0; i < hex.length; i += 2) {
+        const byteValue = parseInt(hex.substring(i, i + 2), 16);
+        if (byteValue < 0x20 || byteValue > 0x7E) {
+          return false;
         }
       }
+      return true;
+    };
 
-      // Parse length
-      let length = 0;
-      let lengthBytes = 0;
-      const firstLengthByte = parseInt(cleanHex.slice(pos, pos + 2), 16);
-      pos += 2;
-      lengthBytes++;
+    return parseEMVTLV(cleanHex).tags.map((tlv) => {
+      const tagDef = getEMVTagDefinition(tlv.tag);
+      let valueAscii = '';
 
-      if (firstLengthByte & 0x80) {
-        // Long form length
-        const numLengthBytes = firstLengthByte & 0x7F;
-        for (let i = 0; i < numLengthBytes; i++) {
-          length = (length << 8) + parseInt(cleanHex.slice(pos, pos + 2), 16);
-          pos += 2;
-          lengthBytes++;
+      // Format value based on tag definition format
+      if (tagDef?.format === 'NUMERIC' || tagDef?.format === 'DATE') {
+        // For numeric/DATE tags, show the hex value as-is (BCD encoded digits)
+        valueAscii = tlv.rawValue;
+      } else if (tagDef?.format === 'ASCII') {
+        // For ASCII tags, convert to ASCII with dots for non-printable
+        const ascii = hexToAscii(tlv.rawValue);
+        valueAscii = /[ -~]/.test(ascii) ? ascii : '';
+      } else if (tagDef?.format === 'HEX' || tagDef?.format === 'BINARY') {
+        // For HEX/BINARY tags:
+        // - Show hex value for short values (likely codes/status bytes)
+        // - For longer values, show ASCII only if clearly text data
+        if (tlv.rawValue.length <= 4) {
+          // Short values are likely codes, show N/A (use hex column)
+          valueAscii = '';
+        } else if (isAllPrintableHex(tlv.rawValue) && tlv.rawValue.length >= 4) {
+          // Longer printable values might be actual text
+          valueAscii = hexToAscii(tlv.rawValue);
         }
+        // else leave empty (shows N/A)
       } else {
-        // Short form length
-        length = firstLengthByte;
+        // For unknown format, try ASCII but require at least 50% printable
+        const ascii = hexToAscii(tlv.rawValue);
+        const printableCount = (ascii.match(/[ -~]/g) || []).length;
+        valueAscii = printableCount >= ascii.length / 2 ? ascii : '';
       }
 
-      // Parse value
-      const valueHex = cleanHex.slice(pos, pos + length * 2);
-      pos += length * 2;
-
-      // Try to convert to ASCII
-      let valueAscii;
-      try {
-        valueAscii = valueHex.match(/.{2}/g)
-          ?.map(b => String.fromCharCode(parseInt(b, 16)))
-          .join('');
-        // Check if it's printable ASCII
-        if (valueAscii && !/^[\x20-\x7E]*$/.test(valueAscii)) {
-          valueAscii = undefined;
-        }
-      } catch {
-        valueAscii = undefined;
-      }
-
-      const item = {
-        tag,
-        tagName: EMV_TAGS[tag] || `Unknown Tag (${tag})`,
-        length,
+      return {
+        tag: tlv.tag,
+        tagName: tlv.tagName,
+        length: tlv.length,
         value: valueAscii || '',
-        valueHex,
+        valueHex: tlv.rawValue,
         valueAscii,
-        startIndex,
-        endIndex: pos,
+        startIndex: 0,
+        endIndex: 0,
       };
-
-      items.push(item);
-    }
-
-    return items;
+    });
   }, []);
 
   const handleParse = useCallback(() => {
@@ -219,12 +195,7 @@ const EmvTlvParser = ({ className = '' }) => {
   }, [input, parseTlv]);
 
   const handleExample = useCallback(() => {
-    const example = '9F02069F03029F3602' +
-                    '5F2A029F060A' +
-                    '9F1A029F3303' +
-                    '9F34029F3501' +
-                    '9F37049F2608' +
-                    '9F10089F0102';
+    const example = '5F340100950500000000009B0200009F360201DE9F2608BD06C566B23DB5D39F2701809F1A0200509F3303E0F8C89F3501229F03060000000000009F100706011203A020009F3704D8E52DD79C01009A032510209F02060000000020005F2A020050820200209F1E0830303030303930358407A00000000310104F07A00000000310109F090200009F410400002184500b5669736120437265646974';
     setInput(example);
     setError('');
   }, []);
@@ -341,7 +312,7 @@ const EmvTlvParser = ({ className = '' }) => {
                   <td className="px-4 py-2 text-sm text-slate-900 dark:text-slate-100">{item.tagName}</td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{item.length}</td>
                   <td className="px-4 py-2 text-sm font-mono text-slate-600 dark:text-slate-400">{item.valueHex}</td>
-                  <td className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400">
+                  <td className="px-4 py-2 text-sm font-mono text-slate-600 dark:text-slate-400">
                     {item.valueAscii || <span className="text-slate-400 dark:text-zinc-500 italic">N/A</span>}
                   </td>
                 </tr>

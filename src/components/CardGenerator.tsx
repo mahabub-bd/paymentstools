@@ -107,8 +107,19 @@ const generateCVV = (length: number): string => {
 
 // Generate cardholder name
 const generateCardholderName = (): string => {
-  const firstNames = ['JOHN', 'JANE', 'MICHAEL', 'SARAH', 'DAVID', 'EMILY', 'ROBERT', 'LISA'];
-  const lastNames = ['SMITH', 'JOHNSON', 'WILLIAMS', 'BROWN', 'JONES', 'GARCIA', 'MILLER', 'DAVIS'];
+  const firstNames = [
+    'MOHAMMAD', 'ABDUL', 'RAHIM', 'KARIM', 'RAHMAN', 'HUSSAIN', 'AHMED', 'ALI',
+    'HASAN', 'HOSSAIN', 'ISLAM', 'HAQUE', 'MHAMUD', 'SHARIAR', 'TANVIR', 'RAFI',
+    'SAKIB', 'ZAHID', 'ARIF', 'SOHAG', 'JUBAIR', 'NAHID', 'TAREQ', 'IMRAN',
+    'FATEMA', 'AKTER', 'BEGUM', 'KHATUN', 'PARVEEN', 'NASRIN', 'SUMAIYA', 'RITA',
+    'FARHANA', 'SHAMIMA', 'REHANA', 'RAFIA', 'NISHA', 'ADNAN', 'FAISAL', 'KASHIF'
+  ];
+  const lastNames = [
+    'AHMED', 'RAHMAN', 'ISLAM', 'HOSSAIN', 'HAQUE', 'MHAMUD', 'HUSSAIN', 'CHOWDHURY',
+    'KHAN', 'SIDDIQUE', 'AKAND', 'HOWLADER', 'SHIKHDER', 'MIAH', 'MOLLAH', 'SHEIKH',
+    'DAS', 'PAUL', 'SARKAR', 'DEY', 'ROY', 'SEN', 'GUHA', 'BISWAS',
+    'MALAKAR', 'KUNDU', 'BARMAN', 'MONDAL', 'GHOSH', 'DEBNATH', 'SINGHA', 'PAL'
+  ];
   return `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
 };
 

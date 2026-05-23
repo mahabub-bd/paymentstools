@@ -235,7 +235,7 @@ const PinFromPinBlock = ({ className = '' }) => {
                 </label>
                 <div className="flex items-baseline gap-2">
                   <div className="font-mono text-3xl font-bold text-green-600 dark:text-green-400 tracking-wider">
-                    {'•'.repeat(result.pin.length)}
+                    {result.pin}
                   </div>
                   <span className="text-sm text-green-600 dark:text-green-400">
                     ({result.pin.length} digits)
@@ -318,7 +318,7 @@ const PinFromPinBlock = ({ className = '' }) => {
               <div className="font-mono text-slate-400 space-y-1">
                 <div>Format Indicator: <span className="text-yellow-400">0</span> (Format 0)</div>
                 <div>PIN Length: <span className="text-yellow-400">{result.pinLength} digits</span></div>
-                <div>PIN: <span className="text-green-500 font-bold">{'•'.repeat(result.pin.length)}</span> ({result.pinLength} digits)</div>
+                <div>PIN: <span className="text-green-500 font-bold">{result.pin}</span> ({result.pinLength} digits)</div>
               </div>
             </div>
           </div>

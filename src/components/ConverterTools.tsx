@@ -101,7 +101,7 @@ const ebcdicToAscii = (hex: string): { ascii: string; table: string } => {
   let table = [];
 
   for (let i = 0; i < cleanHex.length; i += 2) {
-    const hexByte = cleanHex.substr(i, 2);
+    const hexByte = cleanHex.substring(i, i + 2);
     const code = parseInt(hexByte, 16);
     const char = ebcdicTable[code] || `[${code.toString(16).toUpperCase()}]`;
     ascii += (char.length === 1 && code >= 0x80) ? char : (char.match(/^[a-zA-Z0-9 ]$/) ? char : '.');
@@ -162,27 +162,98 @@ const decimalToHex = (decimal: string): string => {
   return hex.match(/.{1,2}/g)?.join(' ') || hex;
 };
 
-// Hex to Binary conversion
-const hexToBinary = (hex: string): string => {
+// Hex to Binary detailed conversion
+const hexToBinaryDetailed = (hex: string): {
+  continuous: string;
+  nibbles: string;
+  bytes: string;
+  bitPositions: string;
+  bitsSet: number[];
+} => {
   const cleanHex = hex.replace(/\s/g, '');
-  let result = '';
-  for (let i = 0; i < cleanHex.length; i++) {
-    const binary = parseInt(cleanHex[i], 16).toString(2).padStart(4, '0');
-    result += binary + ' ';
+  let continuous = '';
+  let nibbles: string[] = [];
+  let bytes: string[] = [];
+  let bitPositions: string[] = [];
+  let bitsSet: number[] = [];
+
+  // Pad to even length for byte grouping
+  const paddedHex = cleanHex.length % 2 === 0 ? cleanHex : '0' + cleanHex;
+
+  for (let i = 0; i < paddedHex.length; i++) {
+    const binary = parseInt(paddedHex[i], 16).toString(2).padStart(4, '0');
+    continuous += binary;
+    nibbles.push(`${paddedHex[i]}=${binary}`);
+
+    // Track bit positions (from right, starting at 0)
+    for (let j = 0; j < 4; j++) {
+      if (binary[3 - j] === '1') {
+        bitsSet.push((i * 4) + j);
+      }
+    }
   }
-  return result.trim();
+
+  // Group by bytes
+  for (let i = 0; i < paddedHex.length; i += 2) {
+    const hexByte = paddedHex.substring(i, i + 2);
+    const binByte = parseInt(hexByte, 16).toString(2).padStart(8, '0');
+    bytes.push(`${hexByte}=${binByte}`);
+  }
+
+  // Create bit position string
+  for (let i = 0; i < continuous.length; i++) {
+    if (i > 0 && i % 8 === 0) bitPositions.push(' ');
+    bitPositions.push((continuous.length - 1 - i).toString().padStart(3, '0'));
+  }
+
+  return {
+    continuous: continuous.match(/.{1,4}/g)?.join(' ') || '',
+    nibbles: nibbles.join(' | '),
+    bytes: bytes.join(' | '),
+    bitPositions: bitPositions.reverse().join(''),
+    bitsSet: bitsSet.length > 0 ? bitsSet.sort((a, b) => a - b) : []
+  };
 };
 
-// Binary to Hex conversion
-const binaryToHex = (binary: string): string => {
+// Binary to detailed hex
+const binaryToHexDetailed = (binary: string): {
+  hex: string;
+  bytes: string;
+  nibbles: string;
+  decimal: string;
+} => {
   const cleanBin = binary.replace(/\s/g, '');
-  let result = '';
+  let hex = '';
+  let nibbles: string[] = [];
+
+  // Process 4 bits at a time (nibbles)
   for (let i = 0; i < cleanBin.length; i += 4) {
-    const nibble = cleanBin.substr(i, 4);
-    const hex = parseInt(nibble, 2).toString(16).toUpperCase();
-    result += hex + ' ';
+    const nibble = cleanBin.substring(i, i + 4);
+    if (nibble.length === 4) {
+      const h = parseInt(nibble, 2).toString(16).toUpperCase();
+      hex += h;
+      nibbles.push(`${nibble}=${h}`);
+    }
   }
-  return result.trim();
+
+  // Group by bytes
+  let bytes: string[] = [];
+  const paddedBin = cleanBin.padEnd(Math.ceil(cleanBin.length / 8) * 8, '0');
+  for (let i = 0; i < paddedBin.length; i += 8) {
+    const byte = paddedBin.substring(i, i + 8);
+    const h = parseInt(byte, 2).toString(16).toUpperCase().padStart(2, '0');
+    bytes.push(`${byte}=${h}`);
+  }
+
+  // Convert to decimal
+  const decimal = BigInt('0b' + cleanBin).toString(10);
+
+  return {
+    hex: hex.match(/.{1,2}/g)?.join(' ') || hex,
+    bytes: bytes.join(' | '),
+    nibbles: nibbles.join(' | '),
+    decimal
+  };
 };
 
 // Base64 to Hex conversion
@@ -205,7 +276,7 @@ const hexToBase64 = (hex: string): string => {
   if (cleanHex.length % 2 !== 0) return 'Invalid hex length';
   let result = '';
   for (let i = 0; i < cleanHex.length; i += 2) {
-    result += String.fromCharCode(parseInt(cleanHex.substr(i, 2), 16));
+    result += String.fromCharCode(parseInt(cleanHex.substring(i, i + 2), 16));
   }
   return btoa(result);
 };
@@ -243,12 +314,270 @@ const formatPan = (pan: string): string => {
   return cleaned.replace(/(.{4})/g, '$1 ').trim();
 };
 
+// XOR Operations
+const hexToXorDetailed = (hex1: string, hex2: string): {
+  result: string;
+  resultUpper: string;
+  breakdown: string;
+  binary: string;
+  error?: string;
+} => {
+  const clean1 = hex1.replace(/\s/g, '').toLowerCase();
+  const clean2 = hex2.replace(/\s/g, '').toLowerCase();
+
+  if (!/^[0-9a-f]+$/.test(clean1) || !/^[0-9a-f]+$/.test(clean2)) {
+    return { result: '', resultUpper: '', breakdown: '', binary: '', error: 'Both inputs must be valid hexadecimal' };
+  }
+
+  const maxLen = Math.max(clean1.length, clean2.length);
+  const padded1 = clean1.padStart(maxLen, '0');
+  const padded2 = clean2.padStart(maxLen, '0');
+
+  let result = '';
+  let resultUpper = '';
+  let breakdown: string[] = [];
+  let binaryBreakdown: string[] = [];
+
+  for (let i = 0; i < maxLen; i += 2) {
+    const byte1 = padded1.substring(i, i + 2);
+    const byte2 = padded2.substring(i, i + 2);
+
+    if (byte1.length < 2 || byte2.length < 2) {
+      // Handle odd length - do per-nibble XOR
+      for (let j = 0; j < Math.max(byte1.length, byte2.length); j++) {
+        const nibble1 = byte1[j] || '0';
+        const nibble2 = byte2[j] || '0';
+        const xorNibble = (parseInt(nibble1, 16) ^ parseInt(nibble2, 16)).toString(16).toUpperCase();
+        result += xorNibble;
+        resultUpper += xorNibble;
+        breakdown.push(`${nibble1.toUpperCase()} ⊕ ${nibble2.toUpperCase()} = ${xorNibble}`);
+
+        const bin1 = parseInt(nibble1, 16).toString(2).padStart(4, '0');
+        const bin2 = parseInt(nibble2, 16).toString(2).padStart(4, '0');
+        const xorBin = parseInt(xorNibble, 16).toString(2).padStart(4, '0');
+        binaryBreakdown.push(`${bin1} ⊕ ${bin2} = ${xorBin}`);
+      }
+    } else {
+      const byteResult = (parseInt(byte1, 16) ^ parseInt(byte2, 16)).toString(16).toUpperCase().padStart(2, '0');
+      result += byteResult.toLowerCase();
+      resultUpper += byteResult;
+      breakdown.push(`${byte1.toUpperCase()} ⊕ ${byte2.toUpperCase()} = ${byteResult}`);
+
+      const bin1 = parseInt(byte1, 16).toString(2).padStart(8, '0');
+      const bin2 = parseInt(byte2, 16).toString(2).padStart(8, '0');
+      const xorBin = parseInt(byteResult, 16).toString(2).padStart(8, '0');
+      binaryBreakdown.push(`${bin1} ⊕ ${bin2} = ${xorBin}`);
+    }
+  }
+
+  return {
+    result,
+    resultUpper,
+    breakdown: breakdown.join(' | '),
+    binary: binaryBreakdown.join(' | ')
+  };
+};
+
+const binaryToXorDetailed = (bin1: string, bin2: string): {
+  result: string;
+  hexResult: string;
+  breakdown: string;
+  error?: string;
+} => {
+  const clean1 = bin1.replace(/\s/g, '');
+  const clean2 = bin2.replace(/\s/g, '');
+
+  if (!/^[01]+$/.test(clean1) || !/^[01]+$/.test(clean2)) {
+    return { result: '', hexResult: '', breakdown: '', error: 'Both inputs must be valid binary' };
+  }
+
+  const maxLen = Math.max(clean1.length, clean2.length);
+  const padded1 = clean1.padStart(maxLen, '0');
+  const padded2 = clean2.padStart(maxLen, '0');
+
+  let result = '';
+  let breakdown: string[] = [];
+
+  // Group by nibbles (4 bits) for hex conversion
+  for (let i = 0; i < maxLen; i += 4) {
+    const nibble1 = padded1.substring(i, i + 4);
+    const nibble2 = padded2.substring(i, i + 4);
+
+    if (nibble1.length < 4 || nibble2.length < 4) continue;
+
+    const xorNibble = (parseInt(nibble1, 2) ^ parseInt(nibble2, 2)).toString(2).padStart(4, '0');
+    result += xorNibble;
+    breakdown.push(`${nibble1} ⊕ ${nibble2} = ${xorNibble}`);
+  }
+
+  // Convert result to hex
+  let hexResult = '';
+  for (let i = 0; i < result.length; i += 4) {
+    const nibble = result.substring(i, i + 4);
+    hexResult += parseInt(nibble, 2).toString(16).toUpperCase();
+  }
+
+  return {
+    result: result.match(/.{1,4}/g)?.join(' ') || result,
+    hexResult,
+    breakdown: breakdown.join(' | ')
+  };
+};
+
+const decimalToXorDetailed = (dec1: string, dec2: string): {
+  result: string;
+  hexResult: string;
+  binaryResult: string;
+  breakdown: string;
+  error?: string;
+} => {
+  const clean1 = dec1.replace(/\s/g, '');
+  const clean2 = dec2.replace(/\s/g, '');
+
+  if (!/^\d+$/.test(clean1) || !/^\d+$/.test(clean2)) {
+    return { result: '', hexResult: '', binaryResult: '', breakdown: '', error: 'Both inputs must be valid decimal numbers' };
+  }
+
+  // Use BigInt for large numbers
+  const num1 = BigInt(clean1);
+  const num2 = BigInt(clean2);
+  const xorResult = num1 ^ num2;
+
+  return {
+    result: xorResult.toString(10),
+    hexResult: xorResult.toString(16).toUpperCase(),
+    binaryResult: xorResult.toString(2),
+    breakdown: `${clean1} ⊕ ${clean2} = ${xorResult.toString(10)}`
+  };
+};
+
+// BCD (Binary Coded Decimal) conversions
+const decimalToBCD = (decimal: string): {
+  bcdHex: string;
+  bcdBinary: string;
+  breakdown: string;
+  error?: string;
+} => {
+  const cleanDec = decimal.replace(/\s/g, '');
+
+  if (!/^\d+$/.test(cleanDec)) {
+    return { bcdHex: '', bcdBinary: '', breakdown: '', error: 'Input must contain only decimal digits' };
+  }
+
+  let bcdHex = '';
+  let breakdown: string[] = [];
+  let bcdBinary = '';
+
+  for (const digit of cleanDec) {
+    const value = parseInt(digit, 10);
+    const hexDigit = value.toString(16).toUpperCase();
+    const binaryNibble = value.toString(2).padStart(4, '0');
+
+    bcdHex += hexDigit;
+    bcdBinary += binaryNibble + ' ';
+    breakdown.push(`${digit} → ${hexDigit} (0x${hexDigit}) = ${binaryNibble} binary`);
+  }
+
+  return {
+    bcdHex: bcdHex.match(/.{1,2}/g)?.join(' ') || bcdHex,
+    bcdBinary: bcdBinary.trim(),
+    breakdown: breakdown.join(' | ')
+  };
+};
+
+const bcdToDecimal = (bcdHex: string): {
+  decimal: string;
+  breakdown: string;
+  error?: string;
+} => {
+  const cleanHex = bcdHex.replace(/\s/g, '').toUpperCase();
+
+  if (!/^[0-9A-F]+$/.test(cleanHex)) {
+    return { decimal: '', breakdown: '', error: 'Input must be valid hexadecimal' };
+  }
+
+  let decimal = '';
+  let breakdown: string[] = [];
+  let hasInvalidBCD = false;
+
+  for (const hexChar of cleanHex) {
+    const value = parseInt(hexChar, 16);
+
+    // Valid BCD digits are 0-9 (hex values 0x0-0x9)
+    if (value > 9) {
+      hasInvalidBCD = true;
+      breakdown.push(`${hexChar} (0x${hexChar}) → Invalid BCD digit (must be 0-9)`);
+      decimal += '?';
+    } else {
+      decimal += value.toString();
+      const binaryNibble = value.toString(2).padStart(4, '0');
+      breakdown.push(`${hexChar} (0x${hexChar}) = ${binaryNibble} → ${value}`);
+    }
+  }
+
+  if (hasInvalidBCD) {
+    return {
+      decimal,
+      breakdown: breakdown.join(' | ') + ' | ⚠️ Some hex digits are not valid BCD (valid: 0-9)',
+    };
+  }
+
+  return {
+    decimal,
+    breakdown: breakdown.join(' | ')
+  };
+};
+
+const binaryToBCDDecode = (binary: string): {
+  decimal: string;
+  bcdHex: string;
+  breakdown: string;
+  error?: string;
+} => {
+  const cleanBin = binary.replace(/\s/g, '');
+
+  if (!/^[01]+$/.test(cleanBin)) {
+    return { decimal: '', bcdHex: '', breakdown: '', error: 'Input must be valid binary' };
+  }
+
+  // Pad to multiple of 4 (nibbles)
+  const paddedBin = cleanBin.padStart(Math.ceil(cleanBin.length / 4) * 4, '0');
+
+  let decimal = '';
+  let bcdHex = '';
+  let breakdown: string[] = [];
+
+  for (let i = 0; i < paddedBin.length; i += 4) {
+    const nibble = paddedBin.substring(i, i + 4);
+    const value = parseInt(nibble, 2);
+    const hexChar = value.toString(16).toUpperCase();
+
+    if (value > 9) {
+      breakdown.push(`${nibble} → ${hexChar} → Invalid BCD (value ${value} > 9)`);
+      decimal += '?';
+    } else {
+      decimal += value.toString();
+      breakdown.push(`${nibble} → ${hexChar} → ${value}`);
+    }
+
+    bcdHex += hexChar;
+  }
+
+  return {
+    decimal,
+    bcdHex: bcdHex.match(/.{1,2}/g)?.join(' ') || bcdHex,
+    breakdown: breakdown.join(' | ')
+  };
+};
+
 const converters = [
   { id: 'hex-ascii', name: 'Hex ↔ ASCII', icon: '🔤' },
   { id: 'ebcdic', name: 'EBCDIC ↔ ASCII', icon: '💾' },
   { id: 'hex-dec', name: 'Hex ↔ Decimal', icon: '🔢' },
+  { id: 'bcd', name: 'BCD Converter', icon: '🔟' },
   { id: 'hex-bin', name: 'Hex ↔ Binary', icon: '💻' },
   { id: 'hex-base64', name: 'Hex ↔ Base64', icon: '📦' },
+  { id: 'xor', name: 'XOR Calculator', icon: '⊕' },
   { id: 'luhn', name: 'Luhn Calculator', icon: '✅' },
 ];
 
@@ -301,6 +630,8 @@ const ConverterResult: React.FC<ConverterResultProps> = ({ label, value, onCopy,
 const ConverterTools = ({ className = '' }: { className?: string }) => {
   const [activeConverter, setActiveConverter] = useState('hex-ascii');
   const [input, setInput] = useState('');
+  const [input2, setInput2] = useState(''); // Second input for XOR
+  const [xorMode, setXorMode] = useState<'hex' | 'binary' | 'decimal'>('hex');
   const [result, setResult] = useState<any>(null);
   const [showDetails, setShowDetails] = useState(false);
 
@@ -322,6 +653,19 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
             setResult(asciiToHexDetailed(input));
           }
           break;
+        case 'xor':
+          if (!input2) {
+            setResult({ error: 'Please enter both values for XOR calculation' });
+            break;
+          }
+          if (xorMode === 'hex') {
+            setResult(hexToXorDetailed(input, input2));
+          } else if (xorMode === 'binary') {
+            setResult(binaryToXorDetailed(input, input2));
+          } else {
+            setResult(decimalToXorDetailed(input, input2));
+          }
+          break;
         case 'ebcdic':
           const ebcdicClean = input.replace(/\s/g, '');
           if (/^[0-9A-Fa-f]+$/.test(ebcdicClean)) {
@@ -337,11 +681,25 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
             setResult({ value: decimalToHex(input), direction: 'dec→hex' });
           }
           break;
-        case 'hex-bin':
-          if (/^[01\s]+$/.test(input.replace(/\s/g, ''))) {
-            setResult({ value: binaryToHex(input), direction: 'bin→hex' });
+        case 'bcd':
+          const bcdClean = input.replace(/\s/g, '');
+          if (/^[0-9]+$/.test(bcdClean)) {
+            // Decimal to BCD
+            setResult({ ...decimalToBCD(input), direction: 'dec→bcd' });
+          } else if (/^[01\s]+$/.test(bcdClean) && bcdClean.length > 1) {
+            // Binary to BCD decode
+            setResult({ ...binaryToBCDDecode(input), direction: 'bin→bcd' });
           } else {
-            setResult({ value: hexToBinary(input), direction: 'hex→bin' });
+            // Hex (BCD) to Decimal
+            setResult({ ...bcdToDecimal(input), direction: 'bcd→dec' });
+          }
+          break;
+        case 'hex-bin':
+          const binClean = input.replace(/\s/g, '');
+          if (/^[01\s]+$/.test(binClean) && binClean.length > 1) {
+            setResult(binaryToHexDetailed(input));
+          } else {
+            setResult(hexToBinaryDetailed(input));
           }
           break;
         case 'hex-base64':
@@ -358,39 +716,62 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
     } catch (err) {
       setResult({ error: (err as Error).message });
     }
-  }, [activeConverter, input]);
+  }, [activeConverter, input, input2, xorMode]);
 
   // Auto-convert on input change
   React.useEffect(() => {
     convert();
-  }, [input, activeConverter, convert]);
+  }, [input, input2, xorMode, activeConverter, convert]);
 
   const handleLoadExample = useCallback(() => {
     setShowDetails(false);
     switch (activeConverter) {
       case 'hex-ascii':
         setInput('3132333435363738393031323334');
+        setInput2('');
         break;
       case 'ebcdic':
         setInput('C1C2C3C4C5C6'); // ABCDEF in EBCDIC
+        setInput2('');
         break;
       case 'hex-dec':
         setInput('FFFFFFFF');
+        setInput2('');
+        break;
+      case 'bcd':
+        setInput('1234567890');
+        setInput2('');
         break;
       case 'hex-bin':
         setInput('1100110011000010');
+        setInput2('');
         break;
       case 'hex-base64':
         setInput('SGVsbG8gV29ybGQ=');
+        setInput2('');
+        break;
+      case 'xor':
+        if (xorMode === 'hex') {
+          setInput('0123456789ABCDEF');
+          setInput2('FEDCBA9876543210');
+        } else if (xorMode === 'binary') {
+          setInput('0000111100101010');
+          setInput2('1010101001110000');
+        } else {
+          setInput('123456789');
+          setInput2('987654321');
+        }
         break;
       case 'luhn':
         setInput('4532015112830366');
+        setInput2('');
         break;
     }
-  }, [activeConverter]);
+  }, [activeConverter, xorMode]);
 
   const handleClear = useCallback(() => {
     setInput('');
+    setInput2('');
     setResult(null);
     setShowDetails(false);
   }, []);
@@ -490,6 +871,59 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
           </div>
         );
 
+      case 'bcd':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
+                Enter Decimal, Hex (BCD), or Binary
+              </label>
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Decimal: 123 | Hex BCD: 1234 | Binary: 0001001000110100"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 min-h-[80px]"
+                rows={3}
+              />
+            </div>
+            {result && result.error ? (
+              <div className="text-red-600 dark:text-red-400">Error: {result.error}</div>
+            ) : result && (
+              <>
+                {/* Decimal to BCD results */}
+                {result.direction === 'dec→bcd' && (
+                  <>
+                    <ConverterResult label={`Conversion: ${result.direction}`} value={result.bcdHex} isMain />
+                    <ConverterResult label="BCD Binary (per nibble)" value={result.bcdBinary} />
+                    {result.breakdown && (
+                      <ConverterResult label="Digit Breakdown" value={result.breakdown} />
+                    )}
+                  </>
+                )}
+                {/* BCD to Decimal results */}
+                {(result.direction === 'bcd→dec' || result.direction === 'bin→bcd') && (
+                  <>
+                    <ConverterResult label="Decimal Result" value={result.decimal} isMain />
+                    {result.bcdHex && (
+                      <ConverterResult label="BCD Hex" value={result.bcdHex} />
+                    )}
+                    {result.breakdown && (
+                      <ConverterResult label="Conversion Breakdown" value={result.breakdown} />
+                    )}
+                  </>
+                )}
+              </>
+            )}
+            <div className="p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+              <p className="text-xs text-purple-700 dark:text-purple-400">
+                <strong>BCD (Binary Coded Decimal)</strong> represents each decimal digit as a 4-bit binary nibble.
+                <br />Example: "12" → 0001 0010 (1=0001, 2=0010)
+                <br />Valid BCD hex values: 0-9 only (A-F are invalid in standard BCD).
+              </p>
+            </div>
+          </div>
+        );
+
       case 'hex-bin':
         return (
           <div className="space-y-4">
@@ -500,14 +934,46 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Enter hex (e.g., F0) or binary (e.g., 11110000)"
+                placeholder="Enter hex (e.g., F0A5) or binary (e.g., 1111000010100101)"
                 className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 min-h-[100px]"
                 rows={4}
               />
             </div>
             {result && (
               <>
-                <ConverterResult label={`Conversion: ${result.direction}`} value={result.value} isMain />
+                {/* Hex to Binary results */}
+                {result.continuous !== undefined && (
+                  <>
+                    <ConverterResult label="Binary (Nibble Grouped)" value={result.continuous} isMain />
+                    {result.nibbles && (
+                      <ConverterResult label="Nibble Breakdown" value={result.nibbles} />
+                    )}
+                    {result.bytes && (
+                      <ConverterResult label="Byte Breakdown" value={result.bytes} />
+                    )}
+                    {result.bitsSet && result.bitsSet.length > 0 && (
+                      <ConverterResult
+                        label="Bits Set (Position)"
+                        value={result.bitsSet.map((b: number) => `Bit ${b}`).join(', ')}
+                      />
+                    )}
+                  </>
+                )}
+                {/* Binary to Hex results */}
+                {result.hex !== undefined && result.nibbles !== undefined && (
+                  <>
+                    <ConverterResult label="Hex Result" value={result.hex} isMain />
+                    {result.nibbles && (
+                      <ConverterResult label="Nibble Breakdown" value={result.nibbles} />
+                    )}
+                    {result.bytes && (
+                      <ConverterResult label="Byte Breakdown" value={result.bytes} />
+                    )}
+                    {result.decimal && (
+                      <ConverterResult label="Decimal Value" value={result.decimal} />
+                    )}
+                  </>
+                )}
               </>
             )}
           </div>
@@ -533,6 +999,134 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
                 <ConverterResult label={`Conversion: ${result.direction}`} value={result.value} isMain />
               </>
             )}
+          </div>
+        );
+
+      case 'xor':
+        return (
+          <div className="space-y-4">
+            {/* Mode Selector */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setXorMode('hex'); setInput(''); setInput2(''); setResult(null); }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  xorMode === 'hex'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
+                }`}
+              >
+                Hex XOR
+              </button>
+              <button
+                onClick={() => { setXorMode('binary'); setInput(''); setInput2(''); setResult(null); }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  xorMode === 'binary'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
+                }`}
+              >
+                Binary XOR
+              </button>
+              <button
+                onClick={() => { setXorMode('decimal'); setInput(''); setInput2(''); setResult(null); }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  xorMode === 'decimal'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
+                }`}
+              >
+                Decimal XOR
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Input 1 */}
+              <div>
+                <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
+                  Value 1 ({xorMode === 'hex' ? 'Hex' : xorMode === 'binary' ? 'Binary' : 'Decimal'})
+                </label>
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (xorMode === 'hex') {
+                      setInput(val.replace(/[^0-9A-Fa-f\s]/g, '').toUpperCase());
+                    } else if (xorMode === 'binary') {
+                      setInput(val.replace(/[^01\s]/g, ''));
+                    } else {
+                      setInput(val.replace(/[^0-9\s]/g, ''));
+                    }
+                  }}
+                  placeholder={xorMode === 'hex' ? 'e.g., 0123456789ABCDEF' : xorMode === 'binary' ? 'e.g., 10101010' : 'e.g., 123456789'}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
+                />
+              </div>
+
+              {/* Input 2 */}
+              <div>
+                <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
+                  Value 2 ({xorMode === 'hex' ? 'Hex' : xorMode === 'binary' ? 'Binary' : 'Decimal'})
+                </label>
+                <input
+                  type="text"
+                  value={input2}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (xorMode === 'hex') {
+                      setInput2(val.replace(/[^0-9A-Fa-f\s]/g, '').toUpperCase());
+                    } else if (xorMode === 'binary') {
+                      setInput2(val.replace(/[^01\s]/g, ''));
+                    } else {
+                      setInput2(val.replace(/[^0-9\s]/g, ''));
+                    }
+                  }}
+                  placeholder={xorMode === 'hex' ? 'e.g., FEDCBA9876543210' : xorMode === 'binary' ? 'e.g., 01010101' : 'e.g., 987654321'}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
+                />
+              </div>
+            </div>
+
+            {/* Results */}
+            {result && (
+              <>
+                {result.error ? (
+                  <div className="text-red-600 dark:text-red-400">{result.error}</div>
+                ) : (
+                  <>
+                    <ConverterResult label={`XOR Result (${xorMode})`} value={result.result || result.resultUpper || result.hexResult} isMain />
+                    {xorMode === 'hex' && result.binary && (
+                      <ConverterResult label="Binary Breakdown" value={result.binary} />
+                    )}
+                    {xorMode === 'hex' && result.breakdown && (
+                      <ConverterResult label="Hex Breakdown (per byte)" value={result.breakdown} />
+                    )}
+                    {xorMode === 'binary' && result.breakdown && (
+                      <ConverterResult label="Nibble Breakdown" value={result.breakdown} />
+                    )}
+                    {xorMode === 'binary' && result.hexResult && (
+                      <ConverterResult label="Hex Result" value={result.hexResult} />
+                    )}
+                    {xorMode === 'decimal' && result.hexResult && (
+                      <ConverterResult label="Hex Result" value={result.hexResult} />
+                    )}
+                    {xorMode === 'decimal' && result.binaryResult && (
+                      <ConverterResult label="Binary Result" value={result.binaryResult.match(/.{1,4}/g)?.join(' ') || result.binaryResult} />
+                    )}
+                  </>
+                )}
+              </>
+            )}
+
+            {/* XOR Info */}
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="text-xs text-blue-700 dark:text-blue-400">
+                <strong>XOR (Exclusive OR)</strong> compares each bit and returns 1 if bits are different, 0 if same.
+                {xorMode === 'hex' && ' Commonly used in payment systems for key derivation and PIN block operations.'}
+                {xorMode === 'binary' && ' Each bit position is compared independently.'}
+                {xorMode === 'decimal' && ' Numbers are converted to binary for XOR operation, then converted back.'}
+              </p>
+            </div>
           </div>
         );
 
@@ -668,12 +1262,20 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
             <p className="text-slate-500 dark:text-slate-500">Convert between hex and decimal (e.g., "FF" ↔ "255")</p>
           </div>
           <div>
+            <p className="font-medium text-slate-600 dark:text-slate-400 mb-1">BCD Converter</p>
+            <p className="text-slate-500 dark:text-slate-500">Binary Coded Decimal: each digit = 4 bits (e.g., "12" → 00010010)</p>
+          </div>
+          <div>
             <p className="font-medium text-slate-600 dark:text-slate-400 mb-1">Hex ↔ Binary</p>
-            <p className="text-slate-500 dark:text-slate-500">Convert between hex and binary (e.g., "F0" ↔ "11110000")</p>
+            <p className="text-slate-500 dark:text-slate-500">Convert with nibble/byte breakdown, bit positions, and set bits analysis</p>
           </div>
           <div>
             <p className="font-medium text-slate-600 dark:text-slate-400 mb-1">Hex ↔ Base64</p>
             <p className="text-slate-500 dark:text-slate-500">Convert between hex and Base64 encoding</p>
+          </div>
+          <div>
+            <p className="font-medium text-slate-600 dark:text-slate-400 mb-1">XOR Calculator</p>
+            <p className="text-slate-500 dark:text-slate-500">Bitwise XOR on hex, binary, or decimal values for key operations</p>
           </div>
           <div>
             <p className="font-medium text-slate-600 dark:text-slate-400 mb-1">Luhn Calculator</p>
