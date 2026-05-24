@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 // Detailed Service Code definitions
 const SERVICE_CODES: Record<number, Record<number, {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // KCV Calculation Functions - Pure JavaScript DES/3DES Implementation
 // =================================================================
@@ -647,9 +647,8 @@ const PaymentKeysReference = ({ className = '' }: { className?: string }) => {
         {Object.entries(KEY_HIERARCHIES).map(([id, key]) => (
           <div
             key={id}
-            className={`relative overflow-hidden rounded-lg border-2 border-slate-200 dark:border-zinc-700 bg-gradient-to-br ${key.color} p-4 cursor-pointer transition-all hover:scale-[1.02] hover:shadow-xl ${
-              selectedKey === id ? 'ring-2 ring-white ring-offset-2' : ''
-            }`}
+            className={`relative overflow-hidden rounded-lg border-2 border-slate-200 dark:border-zinc-700 bg-gradient-to-br ${key.color} p-4 cursor-pointer transition-all hover:scale-[1.02] hover:shadow-xl ${selectedKey === id ? 'ring-2 ring-white ring-offset-2' : ''
+              }`}
             onClick={() => setSelectedKey(selectedKey === id ? null : id)}
           >
             <div className="relative z-10">
@@ -825,41 +824,37 @@ const PaymentKeysReference = ({ className = '' }: { className?: string }) => {
       <div className="flex flex-wrap gap-2 mb-6">
         <button
           onClick={() => setSelectedView('hierarchy')}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-            selectedView === 'hierarchy'
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${selectedView === 'hierarchy'
               ? 'bg-blue-600 text-white'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
-          }`}
+            }`}
         >
           Key Hierarchy
         </button>
         <button
           onClick={() => setSelectedView('testkeys')}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-            selectedView === 'testkeys'
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${selectedView === 'testkeys'
               ? 'bg-blue-600 text-white'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
-          }`}
+            }`}
         >
           EMV Test Keys
         </button>
         <button
           onClick={() => setSelectedView('examples')}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-            selectedView === 'examples'
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${selectedView === 'examples'
               ? 'bg-blue-600 text-white'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
-          }`}
+            }`}
         >
           Usage Examples
         </button>
         <button
           onClick={() => setSelectedView('kcv')}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-            selectedView === 'kcv'
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${selectedView === 'kcv'
               ? 'bg-blue-600 text-white'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
-          }`}
+            }`}
         >
           KCV Calculator
         </button>
@@ -998,7 +993,7 @@ const PaymentKeysReference = ({ className = '' }: { className?: string }) => {
                     </div>
                   ) : (
                     <>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div className="p-3 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
                           <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Component 1 KCV</p>
                           <p className="text-lg font-mono font-bold text-slate-700 dark:text-slate-200">{componentKcvResult.component1?.kcv || '-'}</p>

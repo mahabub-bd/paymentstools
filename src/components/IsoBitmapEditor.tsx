@@ -263,7 +263,7 @@ const IsoBitmapEditor = ({ className = '' }) => {
 
     for (let row = 0; row < 16; row++) {
       const bitsInRow = [];
-      for (let col = 0; col < 4; col++) {
+      for (let col = 0; col < 6; col++) {
         const bitIndex = row + (col * 16);
         const fieldNumber = bitIndex + 1 + offset;
         const fieldInfo = ISO8583_FIELDS[fieldNumber] || { name: 'Reserved', format: '-', description: 'Reserved field' };
@@ -304,7 +304,7 @@ const IsoBitmapEditor = ({ className = '' }) => {
         );
       }
       rows.push(
-        <div key={row} className="grid grid-cols-4 gap-2">
+        <div key={row} className="grid grid-cols-6 gap-2">
           {bitsInRow}
         </div>
       );
@@ -476,7 +476,7 @@ const IsoBitmapEditor = ({ className = '' }) => {
           <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-3">
             Selected Fields ({selectedFields.length})
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 2xl:grid-cols-6 gap-2 max-h-48 overflow-y-auto">
             {selectedFields.map(field => {
               const fieldInfo = ISO8583_FIELDS[field] || { name: 'Reserved', format: '-', description: '' };
               return (
