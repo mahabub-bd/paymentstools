@@ -70,60 +70,59 @@ export const AppSidebar = ({
 
   return (
     <aside
-      className={`${isOpen ? 'w-80' : 'w-16'} bg-white dark:bg-zinc-950 border-r border-slate-200 dark:border-zinc-800 transition-all duration-300 ease-in-out flex flex-col shadow-sm`}
+      className={`${isOpen ? 'w-80' : 'w-16'} bg-white dark:bg-zinc-950 border-r border-slate-200 dark:border-zinc-800 transition-all duration-300 ease-in-out flex flex-col shadow-sm overflow-x-clip`}
     >
       {/* Sidebar Header */}
-      <div className="p-3 border-b border-slate-200 dark:border-zinc-800">
-        <div className="flex items-center justify-between">
-          <Link
-            to="/"
-            className={`flex items-center gap-3 rounded-md hover:bg-slate-50 dark:hover:bg-zinc-900 transition-colors ${!isOpen ? 'mx-auto' : ''}`}
-            title="Go to home"
-          >
-            {isOpen ? (
-              <>
-                <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
-                  <span className="text-white text-sm font-bold">PT</span>
-                </div>
-                <div>
-                  <h1 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
-                    Payment Tools
-                  </h1>
-                  <p className="text-[11px] text-slate-500 dark:text-zinc-500">{totalVisibleTools} tools available</p>
-                </div>
-              </>
-            ) : (
+      <div className="p-3 border-b border-slate-200 dark:border-zinc-800 relative">
+        <button
+          onClick={onToggle}
+          className={`absolute ${isOpen ? 'right-3 top-3' : '-right-3 top-1/2 -translate-y-1/2'} w-8 h-8 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-full flex items-center justify-center hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all duration-300 shadow-sm z-20`}
+          aria-label="Toggle sidebar"
+          title="Toggle sidebar ([)"
+        >
+          <svg className={`w-4 h-4 text-slate-600 dark:text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-0' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <Link
+          to="/"
+          className={`flex items-center gap-3 rounded-md hover:bg-slate-50 dark:hover:bg-zinc-900 transition-colors ${!isOpen ? 'mx-auto' : ''}`}
+          title="Go to home"
+        >
+          {isOpen ? (
+            <>
               <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
                 <span className="text-white text-sm font-bold">PT</span>
               </div>
-            )}
-          </Link>
-          <button
-            onClick={onToggle}
-            className={`p-2 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors`}
-            aria-label="Toggle sidebar"
-            title="Toggle sidebar ([)"
-          >
-            <svg className={`w-5 h-5 text-slate-600 dark:text-slate-400 transition-transform duration-300 ${!isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-        </div>
+              <div>
+                <h1 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
+                  Payment Tools
+                </h1>
+                <p className="text-[11px] text-slate-500 dark:text-zinc-500">{totalVisibleTools} tools available</p>
+              </div>
+            </>
+          ) : (
+            <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+              <span className="text-white text-sm font-bold">PT</span>
+            </div>
+          )}
+        </Link>
 
         {/* Search Bar */}
         {isOpen && (
           <div className="mt-3">
             <div className="relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search tools..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-200 placeholder:text-slate-400"
-            />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search tools..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="w-full pl-9 pr-8 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-200 placeholder:text-slate-400"
+              />
               {searchQuery && (
                 <button
                   onClick={() => onSearchChange('')}
@@ -158,9 +157,8 @@ export const AppSidebar = ({
             <div key={catId} className="mb-2">
               <button
                 onClick={() => onToggleCategory(catId)}
-                className={`w-full flex items-center gap-2 px-2 py-2 rounded-md transition-colors ${
-                  isOpen ? 'hover:bg-slate-50 dark:hover:bg-zinc-900' : 'justify-center'
-                }`}
+                className={`w-full flex items-center gap-2 px-2 py-2 rounded-md transition-colors ${isOpen ? 'hover:bg-slate-50 dark:hover:bg-zinc-900' : 'justify-center'
+                  }`}
                 title={category.label}
               >
                 <span className={`w-1.5 h-5 rounded-full ${isActiveCategory ? accent : 'bg-slate-200 dark:bg-zinc-800'} ${!isOpen ? 'hidden' : ''}`} />
@@ -184,30 +182,27 @@ export const AppSidebar = ({
                 <button
                   key={item.id}
                   onClick={() => onMenuChange(item.id)}
-                  className={`relative w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors group ${
-                    activeMenu === item.id
-                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-200'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-900 dark:hover:text-slate-100'
-                  }`}
+                  className={`relative w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors group ${activeMenu === item.id
+                    ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-200'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-900 dark:hover:text-slate-100'
+                    }`}
                   title={`${item.label} (${item.shortcut})`}
                 >
                   {activeMenu === item.id && (
                     <span className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full ${accent}`} />
                   )}
-                  <span className={`w-8 h-8 rounded-md flex items-center justify-center text-base ${
-                    activeMenu === item.id ? 'bg-white dark:bg-zinc-900 shadow-sm' : 'bg-slate-100 dark:bg-zinc-900'
-                  }`}>
+                  <span className={`w-8 h-8 rounded-md flex items-center justify-center text-base ${activeMenu === item.id ? 'bg-white dark:bg-zinc-900 shadow-sm' : 'bg-slate-100 dark:bg-zinc-900'
+                    }`}>
                     {item.icon}
                   </span>
                   {isOpen && (
                     <div className="flex-1 text-left min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-sm truncate">{item.label}</span>
-                        <kbd className={`ml-2 inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono rounded ${
-                          activeMenu === item.id
-                            ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
-                            : 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400'
-                        }`}>
+                        <kbd className={`ml-2 inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono rounded ${activeMenu === item.id
+                          ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
+                          : 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400'
+                          }`}>
                           {item.shortcut}
                         </kbd>
                       </div>
@@ -228,9 +223,8 @@ export const AppSidebar = ({
         {/* Keyboard Shortcuts Button */}
         <button
           onClick={onShowShortcuts}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-900 ${
-            !isOpen && 'justify-center'
-          }`}
+          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-900 ${!isOpen && 'justify-center'
+            }`}
           title="Keyboard shortcuts (?)"
         >
           <span className="text-base">⌨️</span>
@@ -240,11 +234,10 @@ export const AppSidebar = ({
         {/* Dark Mode Toggle */}
         <button
           onClick={onToggleDarkMode}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-            darkMode
-              ? 'bg-zinc-800 text-white'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-900'
-          } ${!isOpen && 'justify-center'}`}
+          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${darkMode
+            ? 'bg-zinc-800 text-white'
+            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-900'
+            } ${!isOpen && 'justify-center'}`}
           title="Toggle dark mode"
         >
           <span className="text-base">{darkMode ? '🌙' : '☀️'}</span>

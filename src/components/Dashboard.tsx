@@ -6,6 +6,7 @@ import { AppHeader } from './AppHeader';
 import { AppSidebar } from './AppSidebar';
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
 import { LoadingScreen } from './LoadingScreen';
+import { useTheme } from '../contexts/ThemeContext';
 
 const CardGenerator = lazy(() => import('./CardGenerator'));
 const ConverterTools = lazy(() => import('./ConverterTools'));
@@ -26,6 +27,12 @@ const VisaPVV = lazy(() => import('./VisaPVV'));
 const CvvCalculator = lazy(() => import('./CvvCalculator'));
 const EmvCryptogramCalculator = lazy(() => import('./EmvCryptogramCalculator'));
 const EmvRIDReference = lazy(() => import('./EmvRIDReference'));
+const TvrDecoder = lazy(() => import('./TvrDecoder'));
+const CvmResultsDecoder = lazy(() => import('./CvmResultsDecoder'));
+const AipDecoder = lazy(() => import('./AipDecoder'));
+const IadDecoder = lazy(() => import('./IadDecoder'));
+const CvrDecoder = lazy(() => import('./CvrDecoder'));
+const TerminalCapabilitiesDecoder = lazy(() => import('./TerminalCapabilitiesDecoder'));
 const KnowledgeBase = lazy(() => import('./KnowledgeBase'));
 const AidList = lazy(() => import('./AidList'));
 
@@ -59,6 +66,12 @@ const menuItems: MenuItem[] = [
   { id: 'emvtags', label: 'EMV & NFC Tags', icon: '🏷️', category: 'emv', description: 'Complete EMV & NFC tag reference', shortcut: '7' },
   { id: 'emvrid', label: 'RID Reference', icon: '📇', category: 'emv', description: 'Registered Application Provider IDs', shortcut: 'r' },
   { id: 'emvcryptogram', label: 'Cryptogram Calc', icon: '🔐', category: 'emv', description: 'Calculate ARQC/ARPC for EMV', shortcut: 'a' },
+  { id: 'tvr', label: 'TVR', icon: '🧾', category: 'emv', description: 'Tag 95 decoder', shortcut: 'v' },
+  { id: 'cvmresults', label: 'CVM Results', icon: '✅', category: 'emv', description: 'Tag 9F34 decoder', shortcut: 'y' },
+  { id: 'aip', label: 'AIP', icon: '🧩', category: 'emv', description: 'Tag 82 decoder', shortcut: 'u' },
+  { id: 'iad', label: 'IAD', icon: '🧬', category: 'emv', description: 'Tag 9F10 decoder', shortcut: 'd' },
+  { id: 'cvr', label: 'CVR', icon: '✓', category: 'emv', description: 'Card Verification Results decoder', shortcut: 'x' },
+  { id: 'terminalcaps', label: 'Term Caps', icon: '🖲️', category: 'emv', description: 'Tag 9F33 decoder', shortcut: 'q' },
   { id: 'pinblock', label: 'PIN Block', icon: '🔐', category: 'pin', description: 'Calculate PIN blocks', shortcut: '8' },
   { id: 'pinfromblock', label: 'PIN from Block', icon: '🔓', category: 'pin', description: 'Extract PIN from PIN block', shortcut: '9' },
   { id: 'visapvv', label: 'Visa PVV', icon: '💳', category: 'pin', description: 'Visa PIN Verification Value', shortcut: '0' },
@@ -86,8 +99,8 @@ const ToolFallback = () => (
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
@@ -104,15 +117,6 @@ const Dashboard = () => {
     }
     return 'bitmap';
   }, [location.pathname]);
-
-  // Load dark mode preference
-  useEffect(() => {
-    const saved = localStorage.getItem('darkMode');
-    if (saved === 'true') {
-      setDarkMode(true);
-      document.documentElement.classList.add('dark');
-    }
-  }, []);
 
   // Initial loading animation
   useEffect(() => {
@@ -132,18 +136,6 @@ const Dashboard = () => {
   useEffect(() => {
     localStorage.setItem('sidebarOpen', sidebarOpen.toString());
   }, [sidebarOpen]);
-
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    localStorage.setItem('darkMode', newMode.toString());
-    if (newMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  };
 
   // Toggle category collapse
   const toggleCategory = (categoryId: string) => {
@@ -250,9 +242,9 @@ const Dashboard = () => {
         onSearchChange={setSearchQuery}
         onToggleCategory={toggleCategory}
         onMenuChange={handleMenuChange}
-        onToggleDarkMode={toggleDarkMode}
+        onToggleDarkMode={toggleTheme}
         onShowShortcuts={() => setShowKeyboardShortcuts(true)}
-        darkMode={darkMode}
+        darkMode={theme === 'dark'}
       />
 
       {/* Main Content */}
@@ -280,6 +272,12 @@ const Dashboard = () => {
                 <Route path="/emvtags" element={<EmvNfcTags />} />
                 <Route path="/emvrid" element={<EmvRIDReference />} />
                 <Route path="/emvcryptogram" element={<EmvCryptogramCalculator />} />
+                <Route path="/tvr" element={<TvrDecoder />} />
+                <Route path="/cvmresults" element={<CvmResultsDecoder />} />
+                <Route path="/aip" element={<AipDecoder />} />
+                <Route path="/iad" element={<IadDecoder />} />
+                <Route path="/cvr" element={<CvrDecoder />} />
+                <Route path="/terminalcaps" element={<TerminalCapabilitiesDecoder />} />
                 <Route path="/pinblock" element={<PinBlockCalculator />} />
                 <Route path="/pinfromblock" element={<PinFromPinBlock />} />
                 <Route path="/visapvv" element={<VisaPVV />} />

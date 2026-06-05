@@ -1,6 +1,17 @@
 import { useCallback, useMemo, useState } from 'react';
 import { hexToAscii, parseEMVTLV, getEMVTagDefinition } from '../utils/iso8583VersionParser/emv-tlv';
 
+interface ParsedTlvRow {
+  tag: string;
+  tagName: string;
+  length: number;
+  value: string;
+  valueHex: string;
+  valueAscii: string;
+  startIndex: number;
+  endIndex: number;
+}
+
 // Common EMV tag definitions
 const EMV_TAGS = {
   '4F': 'Application Identifier (AID)',
@@ -115,10 +126,10 @@ const EMV_TAGS = {
 const EmvTlvParser = ({ className = '' }) => {
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
-  const [tlvData, setTlvData] = useState([]);
+  const [tlvData, setTlvData] = useState<ParsedTlvRow[]>([]);
 
   // Parse TLV data from hex string
-  const parseTlv = useCallback((hexString) => {
+  const parseTlv = useCallback((hexString: string): ParsedTlvRow[] => {
     const cleanHex = hexString.replace(/\s/g, '').toUpperCase();
     if (cleanHex.length % 2 !== 0) {
       throw new Error('Hex string must have even length');
@@ -179,6 +190,87 @@ const EmvTlvParser = ({ className = '' }) => {
     });
   }, []);
 
+  const escapeExcelCell = useCallback((value: string | number) => (
+    String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+  ), []);
+
+  // Calculate statistics
+  const stats = useMemo(() => ({
+    totalTags: tlvData.length,
+    totalBytes: tlvData.reduce((sum, item) => sum + item.length, 0),
+    uniqueTags: new Set(tlvData.map(item => item.tag)).size,
+  }), [tlvData]);
+
+  const handleDownloadExcel = useCallback(() => {
+    if (tlvData.length === 0) return;
+
+    const cleanInput = input.replace(/\s/g, '').toUpperCase();
+    const generatedAt = new Date().toLocaleString();
+    const rows = tlvData.map((item) => `
+      <tr>
+        <td style="mso-number-format:'\\@';">${escapeExcelCell(item.tag)}</td>
+        <td>${escapeExcelCell(item.tagName)}</td>
+        <td>${escapeExcelCell(item.length)}</td>
+        <td style="mso-number-format:'\\@';">${escapeExcelCell(item.valueHex)}</td>
+        <td style="mso-number-format:'\\@';">${escapeExcelCell(item.valueAscii || 'N/A')}</td>
+      </tr>
+    `).join('');
+
+    const workbookHtml = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+          <meta charset="UTF-8" />
+          <!--[if gte mso 9]>
+          <xml>
+            <x:ExcelWorkbook>
+              <x:ExcelWorksheets>
+                <x:ExcelWorksheet>
+                  <x:Name>EMV TLV Output</x:Name>
+                  <x:WorksheetOptions><x:DisplayGridlines /></x:WorksheetOptions>
+                </x:ExcelWorksheet>
+              </x:ExcelWorksheets>
+            </x:ExcelWorkbook>
+          </xml>
+          <![endif]-->
+        </head>
+        <body>
+          <table>
+            <tr><th colspan="5" style="font-size:16px;text-align:left;">EMV TLV Parser Output</th></tr>
+            <tr><td><strong>Generated At</strong></td><td colspan="4">${escapeExcelCell(generatedAt)}</td></tr>
+            <tr><td><strong>Input Hex</strong></td><td colspan="4" style="mso-number-format:'\\@';">${escapeExcelCell(cleanInput)}</td></tr>
+            <tr><td><strong>Total Tags</strong></td><td>${escapeExcelCell(stats.totalTags)}</td><td><strong>Total Bytes</strong></td><td>${escapeExcelCell(stats.totalBytes)}</td><td></td></tr>
+            <tr><td><strong>Unique Tags</strong></td><td>${escapeExcelCell(stats.uniqueTags)}</td><td colspan="3"></td></tr>
+            <tr></tr>
+            <tr>
+              <th style="background:#dbeafe;">Tag</th>
+              <th style="background:#dbeafe;">Name</th>
+              <th style="background:#dbeafe;">Length</th>
+              <th style="background:#dbeafe;">Value (Hex)</th>
+              <th style="background:#dbeafe;">Value (ASCII)</th>
+            </tr>
+            ${rows}
+          </table>
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob([workbookHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    link.href = url;
+    link.download = `emv-tlv-parser-output-${timestamp}.xls`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [escapeExcelCell, input, stats.totalBytes, stats.totalTags, stats.uniqueTags, tlvData]);
+
   const handleParse = useCallback(() => {
     try {
       setError('');
@@ -205,13 +297,6 @@ const EmvTlvParser = ({ className = '' }) => {
     setTlvData([]);
     setError('');
   }, []);
-
-  // Calculate statistics
-  const stats = useMemo(() => ({
-    totalTags: tlvData.length,
-    totalBytes: tlvData.reduce((sum, item) => sum + item.length, 0),
-    uniqueTags: new Set(tlvData.map(item => item.tag)).size,
-  }), [tlvData]);
 
   return (
     <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-6 ${className}`}>
@@ -264,6 +349,14 @@ const EmvTlvParser = ({ className = '' }) => {
           className="px-4 py-2 bg-white dark:bg-zinc-900 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-zinc-700 rounded-md hover:bg-slate-50 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
         >
           Clear
+        </button>
+        <button
+          onClick={handleDownloadExcel}
+          disabled={tlvData.length === 0}
+          className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors"
+          title={tlvData.length === 0 ? 'Parse TLV data before downloading' : 'Download parsed TLV output as Excel'}
+        >
+          Download Excel
         </button>
       </div>
 

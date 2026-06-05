@@ -1,5 +1,5 @@
 import CryptoJS from 'crypto-js';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface CryptogramResult {
   type: 'ARQC' | 'AAC' | 'TC' | 'ARPC';
@@ -25,6 +25,13 @@ const EmvCryptogramCalculator = ({ className = '' }: { className?: string }) => 
   const [result, setResult] = useState<CryptogramResult | null>(null);
   const [error, setError] = useState('');
   const [showDetails, setShowDetails] = useState(false);
+
+  // Reset result when cryptogram type changes
+  useEffect(() => {
+    setResult(null);
+    setError('');
+    setShowDetails(false);
+  }, [cryptogramType]);
 
   // Calculate EMV Cryptogram (ARQC/AAC/TC)
   const calculateCryptogram = useCallback(() => {
@@ -76,7 +83,10 @@ const EmvCryptogramCalculator = ({ className = '' }: { className?: string }) => 
       const atcData = CryptoJS.enc.Hex.parse(atcPadded);
       const mkacKey = CryptoJS.enc.Hex.parse(cleanMkac);
 
-      const encryptedSK = CryptoJS.TripleDES.encrypt(atcData, mkacKey, {
+      // Use CryptoJS.lib.WordArray for key properly - convert to Base64 for proper key handling
+      const mkacKeyBase64 = CryptoJS.enc.Base64.stringify(mkacKey);
+
+      const encryptedSK = CryptoJS.TripleDES.encrypt(atcData, mkacKeyBase64, {
         mode: CryptoJS.mode.ECB,
         padding: CryptoJS.pad.NoPadding
       });
@@ -94,8 +104,9 @@ const EmvCryptogramCalculator = ({ className = '' }: { className?: string }) => 
       // Encrypt with Session Key
       const dataForEncrypt = CryptoJS.enc.Hex.parse(dataPadded);
       const skKey = CryptoJS.enc.Hex.parse(sessionKey);
+      const skKeyBase64 = CryptoJS.enc.Base64.stringify(skKey);
 
-      const encrypted = CryptoJS.TripleDES.encrypt(dataForEncrypt, skKey, {
+      const encrypted = CryptoJS.TripleDES.encrypt(dataForEncrypt, skKeyBase64, {
         mode: CryptoJS.mode.ECB,
         padding: CryptoJS.pad.NoPadding
       });
@@ -173,19 +184,24 @@ const EmvCryptogramCalculator = ({ className = '' }: { className?: string }) => 
       const atcData = CryptoJS.enc.Hex.parse(atcPadded);
       const mkacKey = CryptoJS.enc.Hex.parse(cleanMkac);
 
-      const encryptedSK = CryptoJS.TripleDES.encrypt(atcData, mkacKey, {
+      // Use CryptoJS.lib.WordArray for key properly - convert to Base64 for proper key handling
+      const mkacKeyBase64 = CryptoJS.enc.Base64.stringify(mkacKey);
+
+      const encryptedSK = CryptoJS.TripleDES.encrypt(atcData, mkacKeyBase64, {
         mode: CryptoJS.mode.ECB,
         padding: CryptoJS.pad.NoPadding
       });
 
       const sessionKey = encryptedSK.ciphertext.toString(CryptoJS.enc.Hex).toUpperCase();
 
-      // ARPC = 3DES(SK, ARQC || ARC)
-      const arpcInput = cleanArqc + cleanArc;
+      // ARPC = 3DES(SK, ARQC || ARC || padding)
+      // Input is 10 bytes (ARQC 8 bytes + ARC 2 bytes), pad to 16 bytes
+      const arpcInput = (cleanArqc + cleanArc).padEnd(32, '0').substring(0, 32);
       const arpcData = CryptoJS.enc.Hex.parse(arpcInput);
       const skKey = CryptoJS.enc.Hex.parse(sessionKey);
+      const skKeyBase64 = CryptoJS.enc.Base64.stringify(skKey);
 
-      const encrypted = CryptoJS.TripleDES.encrypt(arpcData, skKey, {
+      const encrypted = CryptoJS.TripleDES.encrypt(arpcData, skKeyBase64, {
         mode: CryptoJS.mode.ECB,
         padding: CryptoJS.pad.NoPadding
       });
@@ -507,13 +523,23 @@ const EmvCryptogramCalculator = ({ className = '' }: { className?: string }) => 
             </div>
 
             {/* Step 2: Build Input Data */}
-            {cryptogramType !== 'ARPC' && (
+            {cryptogramType !== 'ARPC' ? (
               <div>
                 <p className="text-cyan-400 font-semibold mb-1">Step 2: Build Input Data</p>
                 <div className="font-mono text-slate-400 space-y-1">
                   <div>Format: PAN (last 9) + ATC + UN + Acquirer ID</div>
                   <div>PAN (9): <span className="text-yellow-400">{result.pan.slice(-9).padStart(9, '0')}</span></div>
                   <div>Input: <span className="text-green-400">{result.data}</span></div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p className="text-cyan-400 font-semibold mb-1">Step 2: Build Input Data</p>
+                <div className="font-mono text-slate-400 space-y-1">
+                  <div>Format: ARQC + ARC (padded to 16 bytes)</div>
+                  <div>ARQC: <span className="text-yellow-400">{arqc?.replace(/\s/g, '')}</span></div>
+                  <div>ARC: <span className="text-yellow-400">{result.unp}</span></div>
+                  <div>Input (padded): <span className="text-green-400">{result.data}</span></div>
                 </div>
               </div>
             )}

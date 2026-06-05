@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '../contexts/ThemeContext';
 
 const menuItems = [
   { id: 'bitmap', label: 'Bitmap Editor', icon: '🔢', category: 'ISO 8583', description: 'Create and edit ISO 8583 bitmaps' },
@@ -12,6 +13,11 @@ const menuItems = [
   { id: 'emvtags', label: 'EMV & NFC Tags', icon: '🏷️', category: 'EMV', description: 'Complete EMV & NFC tag reference' },
   { id: 'emvrid', label: 'RID Reference', icon: '📇', category: 'EMV', description: 'Registered Application Provider IDs' },
   { id: 'emvcryptogram', label: 'Cryptogram Calc', icon: '🔐', category: 'EMV', description: 'Calculate ARQC/ARPC for EMV' },
+  { id: 'tvr', label: 'TVR', icon: '🧾', category: 'EMV', description: 'Tag 95 decoder' },
+  { id: 'cvmresults', label: 'CVM Results', icon: '✅', category: 'EMV', description: 'Tag 9F34 decoder' },
+  { id: 'aip', label: 'AIP', icon: '🧩', category: 'EMV', description: 'Tag 82 decoder' },
+  { id: 'iad', label: 'IAD', icon: '🧬', category: 'EMV', description: 'Tag 9F10 decoder' },
+  { id: 'terminalcaps', label: 'Term Caps', icon: '🖲️', category: 'EMV', description: 'Tag 9F33 decoder' },
   { id: 'pinblock', label: 'PIN Block', icon: '🔐', category: 'PIN Tools', description: 'Calculate PIN blocks' },
   { id: 'pinfromblock', label: 'PIN from Block', icon: '🔓', category: 'PIN Tools', description: 'Extract PIN from PIN block' },
   { id: 'visapvv', label: 'Visa PVV', icon: '💳', category: 'PIN Tools', description: 'Visa PIN Verification Value' },
@@ -41,20 +47,13 @@ const categories = [
 ];
 
 const HomePage = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const { theme, toggleTheme } = useTheme();
   const [loaded, setLoaded] = useState(false);
   const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; size: number; duration: number; delay: number }>>([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('darkMode');
-    if (saved === 'true') {
-      setDarkMode(true);
-      document.documentElement.classList.add('dark');
-    }
-    // Trigger animations after mount
     setTimeout(() => setLoaded(true), 100);
 
-    // Generate floating particles
     const newParticles = Array.from({ length: 15 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
@@ -65,17 +64,6 @@ const HomePage = () => {
     }));
     setParticles(newParticles);
   }, []);
-
-  const toggleDarkMode = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    localStorage.setItem('darkMode', newMode.toString());
-    if (newMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  };
 
   return (
     <>
@@ -164,7 +152,7 @@ const HomePage = () => {
         .hover-lift:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 20px 40px -15px rgba(0,0,0,0.2); }
       `}</style>
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-black dark:to-zinc-950 transition-colors duration-500 animate-gradient">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-black dark:to-zinc-950 transition-colors duration-200 animate-gradient">
         {/* Animated background blobs */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
           <div className={`absolute top-20 left-20 w-72 h-72 bg-blue-400/30 dark:bg-blue-600/20 rounded-full blur-3xl animate-pulse-glow`} />
@@ -519,11 +507,11 @@ const HomePage = () => {
                 Launch App
               </Link>
               <button
-                onClick={toggleDarkMode}
+                onClick={toggleTheme}
                 className="p-2 rounded-lg bg-white dark:bg-zinc-900 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110 hover:rotate-12"
                 title="Toggle dark mode"
               >
-                <span className="text-base">{darkMode ? '🌙' : '☀️'}</span>
+                <span className="text-base">{theme === 'dark' ? '🌙' : '☀️'}</span>
               </button>
             </div>
           </div>
