@@ -177,8 +177,8 @@ const HomePage = () => {
         </div>
 
         {/* Left Side - ATM Machine */}
-        <div className={`fixed left-4 top-1/2 -translate-y-1/2 hidden xl:block pointer-events-none transition-all duration-1000 delay-700 ${loaded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-20'}`}>
-          <div className="relative animate-float-slow">
+        <div className={`fixed left-0 xl:left-4 top-1/2 -translate-y-1/2 hidden lg:block pointer-events-none transition-all duration-1000 delay-700 ${loaded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-20'}`}>
+          <div className="relative animate-float-slow -ml-20 xl:ml-0">
             <svg width="200" height="320" viewBox="0 0 200 320" className="opacity-30 dark:opacity-40">
               {/* ATM Main Body */}
               <rect x="10" y="10" width="180" height="300" rx="16" fill="currentColor" className="text-slate-700 dark:text-slate-500" />
@@ -226,7 +226,7 @@ const HomePage = () => {
         </div>
 
         {/* Left Side - Mastercard */}
-        <div className={`fixed left-20 bottom-32 hidden xl:block pointer-events-none transition-all duration-1000 delay-1000 ${loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+        <div className={`fixed left-8 xl:left-20 bottom-32 hidden lg:block pointer-events-none transition-all duration-1000 delay-1000 ${loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <div className="relative animate-float-rotate-reverse w-[200px] h-[130px]">
             <svg width="200" height="130" viewBox="-10 -10 220 130" className="drop-shadow-2xl" preserveAspectRatio="xMidYMid meet">
               {/* Card Body */}
@@ -279,8 +279,8 @@ const HomePage = () => {
         </div>
 
         {/* Right Side - POS Terminal (Sunmi P3 style) */}
-        <div className={`fixed right-4 top-1/2 -translate-y-1/2 hidden xl:block pointer-events-none transition-all duration-1000 delay-700 ${loaded ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-20'}`}>
-          <div className="relative animate-float-slow" style={{ animationDelay: '1s' }}>
+        <div className={`fixed right-0 xl:right-4 top-1/2 -translate-y-1/2 hidden lg:block pointer-events-none transition-all duration-1000 delay-700 ${loaded ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-20'}`}>
+          <div className="relative animate-float-slow -mr-12 xl:mr-0" style={{ animationDelay: '1s' }}>
             <svg width="140" height="280" viewBox="0 0 140 280" className="opacity-30 dark:opacity-40">
               {/* Printer Base */}
               <rect x="25" y="220" width="90" height="45" rx="6" fill="currentColor" className="text-slate-700 dark:text-slate-500" />
@@ -321,7 +321,7 @@ const HomePage = () => {
         </div>
 
         {/* Credit Card - Floating */}
-        <div className={`fixed right-16 top-24 hidden xl:block pointer-events-none transition-all duration-1000 delay-1000 ${loaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'}`}>
+        <div className={`fixed right-8 xl:right-16 top-24 hidden lg:block pointer-events-none transition-all duration-1000 delay-1000 ${loaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'}`}>
           <div className="relative animate-float-rotate w-[220px] h-[140px]">
             <svg width="220" height="140" viewBox="-10 -10 220 140" className="drop-shadow-2xl" preserveAspectRatio="xMidYMid meet">
               {/* Card Body */}
@@ -488,79 +488,80 @@ const HomePage = () => {
         </div>
 
         {/* Header */}
-        <div className={`max-w-6xl mx-auto px-4 py-6 transition-all duration-700 ${loaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-600/30 animate-bounce-subtle">
-                <span className="text-white text-sm font-bold">PT</span>
+        <div className={`max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8 transition-all duration-700 ${loaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 min-w-0">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-600/30 animate-bounce-subtle flex-shrink-0">
+                <span className="text-white text-sm sm:text-base lg:text-lg font-bold">PT</span>
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-slate-900 dark:text-white">Payment Tools</h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Payment Industry Developer Tools</p>
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 dark:text-white truncate">Payment Tools</h1>
+                <p className="text-[10px] sm:text-xs lg:text-sm text-slate-500 dark:text-slate-400 truncate hidden xs:block">Payment Industry Developer Tools</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Link
                 to="/app/bitmap"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-lg shadow-blue-600/30 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-600/40 hover-lift"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 lg:px-5 lg:py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm lg:text-base font-medium rounded-lg shadow-lg shadow-blue-600/30 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-600/40 hover-lift"
               >
-                Launch App
+                <span className="hidden sm:inline">Launch App</span>
+                <span className="sm:hidden">Launch</span>
               </Link>
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-lg bg-white dark:bg-zinc-900 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110 hover:rotate-12"
+                className="p-1.5 sm:p-2 lg:p-2.5 rounded-lg bg-white dark:bg-zinc-900 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110 hover:rotate-12"
                 title="Toggle dark mode"
               >
-                <span className="text-base">{theme === 'dark' ? '🌙' : '☀️'}</span>
+                <span className="text-sm sm:text-base lg:text-lg">{theme === 'dark' ? '🌙' : '☀️'}</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Content */}
-        <div className="max-w-6xl mx-auto px-4 pb-8">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 pb-6 sm:pb-8 lg:pb-10">
           {/* Categories */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3 lg:gap-4 mb-4 sm:mb-6 lg:mb-8">
             {categories.map((category, index) => (
               <Link
                 key={category.id}
                 to="/app/bitmap"
-                className={`group relative overflow-hidden rounded-xl p-4 bg-gradient-to-br ${categoryColors[category.color]} shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover-lift animate-shimmer ${loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+                className={`group relative overflow-hidden rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-5 bg-gradient-to-br ${categoryColors[category.color]} shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover-lift animate-shimmer ${loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
                 style={{ transitionDelay: `${index * 100}ms` }}
               >
                 <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="text-2xl mb-1 transform group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300">{category.icon}</div>
-                <h3 className="text-white text-sm font-semibold">{category.label}</h3>
+                <div className="text-xl sm:text-2xl lg:text-3xl mb-1 sm:mb-1.5 transform group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300">{category.icon}</div>
+                <h3 className="text-white text-xs sm:text-sm lg:text-base font-semibold truncate">{category.label}</h3>
               </Link>
             ))}
           </div>
 
           {/* Tools Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 lg:gap-4">
             {menuItems.map((item, index) => (
               <Link
                 key={item.id}
                 to={`/app/${item.id}`}
-                className={`group p-4 bg-white dark:bg-zinc-900 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-slate-200 dark:border-zinc-800 hover-lift ${loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+                className={`group p-3 sm:p-4 lg:p-5 bg-white dark:bg-zinc-900 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-slate-200 dark:border-zinc-800 hover-lift ${loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
                 style={{ transitionDelay: `${500 + index * 50}ms` }}
               >
-                <div className="text-2xl mb-2 transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">{item.icon}</div>
-                <h3 className="font-semibold text-slate-900 dark:text-white text-sm mb-1 truncate">{item.label}</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{item.description}</p>
+                <div className="text-xl sm:text-2xl lg:text-3xl mb-2 sm:mb-2 lg:mb-3 transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">{item.icon}</div>
+                <h3 className="font-semibold text-slate-900 dark:text-white text-xs sm:text-sm lg:text-base mb-1 sm:mb-1 truncate">{item.label}</h3>
+                <p className="text-[10px] sm:text-xs lg:text-sm text-slate-500 dark:text-slate-400 line-clamp-1 sm:line-clamp-2 lg:line-clamp-2 hidden xs:block">{item.description}</p>
               </Link>
             ))}
           </div>
         </div>
 
         {/* Footer */}
-        <footer className={`border-t border-slate-200 dark:border-zinc-800 py-4 transition-all duration-700 delay-700 ${loaded ? 'opacity-100' : 'opacity-0'}`}>
-          <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
-            <p className="text-xs text-slate-500 dark:text-slate-400">© 2026 Payment Tools</p>
+        <footer className={`border-t border-slate-200 dark:border-zinc-800 py-3 sm:py-4 transition-all duration-700 delay-700 ${loaded ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="max-w-6xl mx-auto px-3 sm:px-4 flex items-center justify-between gap-2">
+            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">© 2026 Payment Tools</p>
             <a
               href="https://github.com/mahabub-bd/paymentstools"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-slate-500 hover:text-blue-500 dark:text-slate-400 dark:hover:text-blue-400 transition-colors hover:underline hover:scale-105 inline-block"
+              className="text-[10px] sm:text-xs text-slate-500 hover:text-blue-500 dark:text-slate-400 dark:hover:text-blue-400 transition-colors hover:underline hover:scale-105 inline-block"
             >
               GitHub
             </a>

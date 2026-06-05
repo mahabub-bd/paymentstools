@@ -16,10 +16,23 @@
   --color-foreground-dark: #ffffff;
   --color-foreground-muted-dark: #94a3b8;
   --color-border-dark: rgba(255, 255, 255, 0.1);
+
+  /* Custom breakpoints */
+  --breakpoint-xs: 30rem; /* 480px */
 }
 
 /* Define dark mode variant */
 @variant dark (.dark &);
+
+/* Custom xs breakpoint utilities */
+@media (min-width: 30rem) {
+  .xs\:block { display: block; }
+  .xs\:hidden { display: none; }
+  .xs\:flex { display: flex; }
+  .xs\:grid { display: grid; }
+  .xs\:inline { display: inline; }
+  .xs\:inline-block { display: inline-block; }
+}
 
 * {
   box-sizing: border-box;
