@@ -240,6 +240,4 @@ If you find this tool useful, please consider giving it a ⭐ on GitHub!
 
 ---
 
-<div align="center">
-  <sub>Built with ❤️ for the payment card industry community</sub>
-</div>
+
