@@ -25,7 +25,7 @@ export const menuItems: MenuItem[] = [
   { id: 'aip', label: 'AIP', icon: '🧩', category: 'emv', description: 'Tag 82 decoder', shortcut: 'u' },
   { id: 'iad', label: 'IAD', icon: '🧬', category: 'emv', description: 'Tag 9F10 decoder', shortcut: 'd' },
   { id: 'cvr', label: 'CVR', icon: '✓', category: 'emv', description: 'Card Verification Results decoder', shortcut: 'x' },
-  { id: 'terminalcaps', label: 'Term Caps', icon: '🖲️', category: 'emv', description: 'Tag 9F33 decoder', shortcut: 'q' },
+  { id: 'terminalcaps', label: 'Terminal Capabilities', icon: '🖲️', category: 'emv', description: 'Tag 9F33 - Terminal Capabilities Decoder', shortcut: 'q' },
   { id: 'pinblock', label: 'PIN Block', icon: '🔐', category: 'pin', description: 'Calculate PIN blocks', shortcut: '8' },
   { id: 'pinfromblock', label: 'PIN from Block', icon: '🔓', category: 'pin', description: 'Extract PIN from PIN block', shortcut: '9' },
   { id: 'visapvv', label: 'Visa PVV', icon: '💳', category: 'pin', description: 'Visa PIN Verification Value', shortcut: '0' },

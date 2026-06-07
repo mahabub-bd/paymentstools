@@ -186,30 +186,30 @@ export function EmvNfcTags({ className = '' }: { className?: string }) {
   };
 
   return (
-    <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-6 ${className}`}>
+    <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-3 sm:p-4 md:p-6 ${className}`}>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white mb-2">
           EMV & NFC Tags Reference
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 text-sm">
+        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
           Complete list of EMV and NFC tags with descriptions, sources, and formats
         </p>
       </div>
 
       {/* Search */}
-      <div className="mb-4">
+      <div className="mb-3 sm:mb-4">
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search by tag, name, description, or source..."
-          className="w-full px-4 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+          className="w-full px-3 py-2 sm:px-4 text-sm border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
         />
       </div>
 
       {/* Category Filters */}
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="mb-4 sm:mb-6 flex flex-wrap gap-1.5 sm:gap-2">
         {TAG_CATEGORIES.map(cat => {
           const count = cat.id === 'all' ? EMV_TAGS.length :
             cat.id === 'card' ? EMV_TAGS.filter(t => t.source === 'Card').length :
@@ -223,7 +223,7 @@ export function EmvNfcTags({ className = '' }: { className?: string }) {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                 selectedCategory === cat.id
                   ? 'bg-blue-600 text-white dark:bg-blue-600 dark:text-white'
                   : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-zinc-700'
@@ -236,114 +236,150 @@ export function EmvNfcTags({ className = '' }: { className?: string }) {
       </div>
 
       {/* Results Count */}
-      <div className="mb-4 text-sm text-slate-600 dark:text-slate-400">
+      <div className="mb-3 sm:mb-4 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
         Showing {filteredTags.length} of {EMV_TAGS.length} tags
       </div>
 
-      {/* Tags Table */}
-      <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-zinc-800">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
-              <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300 min-w-[100px]">Tag</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300 min-w-[80px]">Source</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Name</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300 min-w-[100px]">Format</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300 min-w-[120px]">Length</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300 min-w-[80px]">Type</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredTags.map((tag, idx) => (
-              <tr
-                key={`${tag.tag}-${idx}`}
-                className="border-b border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors cursor-pointer"
-                onClick={() => setSelectedTag(tag)}
-              >
-                <td className="py-3 px-4">
-                  <span className="font-mono text-lg font-bold text-blue-600 dark:text-blue-400">
-                    {tag.tag}
-                  </span>
-                </td>
-                <td className="py-3 px-4">
-                  <span className={`px-2 py-1 rounded-md text-xs font-medium ${getSourceColor(tag.source)}`}>
+      {/* Tags Table - Card Layout on Mobile, Table on Larger Screens */}
+      <div className="rounded-lg border border-slate-200 dark:border-zinc-800 overflow-hidden">
+        {/* Mobile Card Layout */}
+        <div className="sm:hidden">
+          {filteredTags.map((tag, idx) => (
+            <div
+              key={`${tag.tag}-${idx}`}
+              className="p-3 border-b border-slate-200 dark:border-zinc-800 last:border-b-0 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors cursor-pointer"
+              onClick={() => setSelectedTag(tag)}
+            >
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <span className="font-mono text-base font-bold text-blue-600 dark:text-blue-400">
+                  {tag.tag}
+                </span>
+                <div className="flex gap-1 shrink-0">
+                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${getSourceColor(tag.source)}`}>
                     {tag.source}
                   </span>
-                </td>
-                <td className="py-3 px-4 text-slate-700 dark:text-slate-300">
-                  {tag.name}
-                </td>
-                <td className="py-3 px-4 font-mono text-xs text-slate-600 dark:text-zinc-400">
-                  {tag.format}
-                </td>
-                <td className="py-3 px-4 text-xs text-slate-600 dark:text-zinc-400">
-                  {tag.length}
-                </td>
-                <td className="py-3 px-4">
-                  <span className={`px-2 py-1 rounded-md text-xs font-medium ${getTypeColor(tag.type)}`}>
-                    {tag.type}
+                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${getTypeColor(tag.type)}`}>
+                    {tag.type === 'constructed' ? 'C' : 'P'}
                   </span>
-                </td>
+                </div>
+              </div>
+              <div className="text-sm font-medium text-slate-800 dark:text-slate-200 mb-1">
+                {tag.name}
+              </div>
+              <div className="flex gap-2 text-[10px] text-slate-500 dark:text-zinc-500">
+                <span className="font-mono">{tag.format}</span>
+                <span>•</span>
+                <span>{tag.length}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop Table Layout */}
+        <div className="hidden sm:block overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
+                <th className="text-left py-2 px-3 sm:py-3 sm:px-4 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap min-w-[80px]">Tag</th>
+                <th className="text-left py-2 px-3 sm:py-3 sm:px-4 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap min-w-[70px]">Source</th>
+                <th className="text-left py-2 px-3 sm:py-3 sm:px-4 font-semibold text-slate-700 dark:text-slate-300">Name</th>
+                <th className="text-left py-2 px-3 sm:py-3 sm:px-4 font-semibold text-slate-700 dark:text-slate-300 hidden lg:table-cell min-w-[80px]">Format</th>
+                <th className="text-left py-2 px-3 sm:py-3 sm:px-4 font-semibold text-slate-700 dark:text-slate-300 hidden xl:table-cell min-w-[100px]">Length</th>
+                <th className="text-left py-2 px-3 sm:py-3 sm:px-4 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap min-w-[60px]">Type</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredTags.map((tag, idx) => (
+                <tr
+                  key={`${tag.tag}-${idx}`}
+                  className="border-b border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors cursor-pointer"
+                  onClick={() => setSelectedTag(tag)}
+                >
+                  <td className="py-2 px-3 sm:py-3 sm:px-4 whitespace-nowrap">
+                    <span className="font-mono text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
+                      {tag.tag}
+                    </span>
+                  </td>
+                  <td className="py-2 px-3 sm:py-3 sm:px-4 whitespace-nowrap">
+                    <span className={`px-2 py-1 rounded-md text-xs font-medium ${getSourceColor(tag.source)}`}>
+                      {tag.source}
+                    </span>
+                  </td>
+                  <td className="py-2 px-3 sm:py-3 sm:px-4 text-slate-700 dark:text-slate-300">
+                    {tag.name}
+                  </td>
+                  <td className="py-2 px-3 sm:py-3 sm:px-4 font-mono text-xs text-slate-600 dark:text-zinc-400 hidden lg:table-cell">
+                    {tag.format}
+                  </td>
+                  <td className="py-2 px-3 sm:py-3 sm:px-4 text-xs text-slate-600 dark:text-zinc-400 hidden xl:table-cell">
+                    {tag.length}
+                  </td>
+                  <td className="py-2 px-3 sm:py-3 sm:px-4 whitespace-nowrap">
+                    <span className={`px-2 py-1 rounded-md text-xs font-medium ${getTypeColor(tag.type)}`}>
+                      {tag.type}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {filteredTags.length === 0 && (
-        <div className="text-center py-12 text-slate-500 dark:text-zinc-500">
-          <p>No EMV tags found matching your search.</p>
+        <div className="text-center py-8 sm:py-12 text-slate-500 dark:text-zinc-500">
+          <p className="text-sm sm:text-base">No EMV tags found matching your search.</p>
         </div>
       )}
 
       {/* Tag Detail Modal */}
       {selectedTag && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedTag(null)}>
-          <div className="bg-white dark:bg-zinc-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-white font-mono">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4" onClick={() => setSelectedTag(null)}>
+          <div className="bg-white dark:bg-zinc-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white font-mono truncate">
                   {selectedTag.tag}
                 </h2>
-                <h3 className="text-lg font-semibold text-slate-600 dark:text-slate-300 mt-1">
+                <h3 className="text-base sm:text-lg font-semibold text-slate-600 dark:text-slate-300 mt-1 truncate">
                   {selectedTag.name}
                 </h3>
               </div>
               <button
                 onClick={() => setSelectedTag(null)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-2xl"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-2xl sm:text-3xl ml-2 shrink-0"
               >
                 ×
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="p-3 bg-slate-50 dark:bg-zinc-800 rounded-lg">
-                  <p className="text-xs text-slate-500 dark:text-zinc-500 mb-1">Source</p>
-                  <span className={`px-2 py-1 rounded-md text-xs font-medium ${getSourceColor(selectedTag.source)}`}>
+            <div className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                <div className="p-2 sm:p-3 bg-slate-50 dark:bg-zinc-800 rounded-lg">
+                  <p className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-500 mb-1">Source</p>
+                  <span className={`px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium ${getSourceColor(selectedTag.source)}`}>
                     {selectedTag.source}
                   </span>
                 </div>
-                <div className="p-3 bg-slate-50 dark:bg-zinc-800 rounded-lg">
-                  <p className="text-xs text-slate-500 dark:text-zinc-500 mb-1">Format</p>
-                  <p className="font-mono text-sm text-slate-800 dark:text-slate-200">{selectedTag.format}</p>
+                <div className="p-2 sm:p-3 bg-slate-50 dark:bg-zinc-800 rounded-lg">
+                  <p className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-500 mb-1">Format</p>
+                  <p className="font-mono text-xs sm:text-sm text-slate-800 dark:text-slate-200 truncate">{selectedTag.format}</p>
                 </div>
-                <div className="p-3 bg-slate-50 dark:bg-zinc-800 rounded-lg">
-                  <p className="text-xs text-slate-500 dark:text-zinc-500 mb-1">Length</p>
-                  <p className="font-mono text-sm text-slate-800 dark:text-slate-200">{selectedTag.length}</p>
+                <div className="p-2 sm:p-3 bg-slate-50 dark:bg-zinc-800 rounded-lg">
+                  <p className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-500 mb-1">Length</p>
+                  <p className="font-mono text-xs sm:text-sm text-slate-800 dark:text-slate-200 truncate">{selectedTag.length}</p>
                 </div>
-                <div className="p-3 bg-slate-50 dark:bg-zinc-800 rounded-lg">
-                  <p className="text-xs text-slate-500 dark:text-zinc-500 mb-1">Type</p>
-                  <span className={`px-2 py-1 rounded-md text-xs font-medium ${getTypeColor(selectedTag.type)}`}>
+                <div className="p-2 sm:p-3 bg-slate-50 dark:bg-zinc-800 rounded-lg">
+                  <p className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-500 mb-1">Type</p>
+                  <span className={`px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium ${getTypeColor(selectedTag.type)}`}>
                     {selectedTag.type}
                   </span>
                 </div>
               </div>
 
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <h4 className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2">Description</h4>
-                <p className="text-sm text-blue-600 dark:text-blue-400">
+              <div className="p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h4 className="text-xs sm:text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2">Description</h4>
+                <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400">
                   {selectedTag.description}
                 </p>
               </div>
@@ -353,9 +389,9 @@ export function EmvNfcTags({ className = '' }: { className?: string }) {
       )}
 
       {/* Legend */}
-      <div className="mt-6 p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Tag Format Codes</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-slate-600 dark:text-slate-400">
+      <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
+        <h3 className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 sm:mb-3">Tag Format Codes</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-1 sm:gap-4 text-[10px] sm:text-xs text-slate-600 dark:text-slate-400">
           <div><span className="font-mono font-bold">n</span> - Numeric (digits 0-9)</div>
           <div><span className="font-mono font-bold">a</span> - Alphabetic (a-z, A-Z)</div>
           <div><span className="font-mono font-bold">an</span> - Alphanumeric</div>
@@ -368,7 +404,7 @@ export function EmvNfcTags({ className = '' }: { className?: string }) {
       </div>
 
       {/* Source */}
-      <div className="mt-4 text-xs text-slate-400 dark:text-zinc-600 text-center">
+      <div className="mt-4 text-[10px] sm:text-xs text-slate-400 dark:text-zinc-600 text-center">
         Source: <a href="https://www.eftlab.com/knowledge-base/complete-list-of-emv-nfc-tags" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">EFT Lab</a>
       </div>
     </div>

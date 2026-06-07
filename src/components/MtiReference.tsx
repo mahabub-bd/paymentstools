@@ -97,33 +97,33 @@ export function MtiReference({ className = '' }: { className?: string }) {
   };
 
   return (
-    <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-6 ${className}`}>
+    <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-3 sm:p-4 md:p-6 ${className}`}>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white mb-2">
           ISO 8583 MTI Reference
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 text-sm">
+        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
           Message Type Identifier (MTI) codes and their usage in ISO 8583 transactions
         </p>
       </div>
 
       {/* Search */}
-      <div className="mb-4">
+      <div className="mb-3 sm:mb-4">
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search by MTI, meaning, or usage..."
-          className="w-full px-4 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+          className="w-full px-3 py-2 sm:px-4 text-sm border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
         />
       </div>
 
       {/* Category Filters */}
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="mb-4 sm:mb-6 flex flex-wrap gap-1.5 sm:gap-2">
         <button
           onClick={() => setSelectedCategory(null)}
-          className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+          className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${
             !selectedCategory
               ? 'bg-blue-600 text-white'
               : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-zinc-700'
@@ -137,75 +137,108 @@ export function MtiReference({ className = '' }: { className?: string }) {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id === selectedCategory ? null : cat.id)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                 selectedCategory === cat.id
                   ? getActiveCategoryStyle(cat.color)
                   : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-zinc-700'
               }`}
             >
-              {cat.label} ({count})
+              <span className="hidden sm:inline">{cat.label} </span>
+              <span className="sm:hidden">{cat.id.substring(0, 2)}xx</span>
+              ({count})
             </button>
           );
         })}
       </div>
 
       {/* Results Count */}
-      <div className="mb-4 text-sm text-slate-600 dark:text-slate-400">
+      <div className="mb-3 sm:mb-4 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
         Showing {filteredData.length} of {MTI_DATA.length} MTI codes
       </div>
 
-      {/* MTI Table */}
-      <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-zinc-800">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
-              <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">MTI</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Category</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Meaning</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Usage</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.map((item) => {
-              const category = getCategoryForMti(item.mti);
-              return (
-                <tr
-                  key={item.mti}
-                  className="border-b border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
-                >
-                  <td className="py-3 px-4">
-                    <span className="font-mono text-lg font-bold text-blue-600 dark:text-blue-400">
-                      {item.mti}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className={`px-2 py-1 rounded-md text-xs font-medium ${getCategoryColor(category.color)}`}>
-                      {category.id.toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 font-medium text-slate-800 dark:text-slate-200">
-                    {item.meaning}
-                  </td>
-                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400 max-w-md">
-                    {item.usage}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      {/* MTI Table - Card Layout on Mobile, Table on Larger Screens */}
+      <div className="rounded-lg border border-slate-200 dark:border-zinc-800 overflow-hidden">
+        {/* Mobile Card Layout */}
+        <div className="sm:hidden">
+          {filteredData.map((item) => {
+            const category = getCategoryForMti(item.mti);
+            return (
+              <div
+                key={item.mti}
+                className="p-3 border-b border-slate-200 dark:border-zinc-800 last:border-b-0 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <span className="font-mono text-base font-bold text-blue-600 dark:text-blue-400">
+                    {item.mti}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-md text-xs font-medium shrink-0 ${getCategoryColor(category.color)}`}>
+                    {category.id.toUpperCase()}
+                  </span>
+                </div>
+                <div className="font-medium text-slate-800 dark:text-slate-200 text-sm mb-1">
+                  {item.meaning}
+                </div>
+                <div className="text-slate-600 dark:text-slate-400 text-xs">
+                  {item.usage}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop Table Layout */}
+        <div className="hidden sm:block overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
+                <th className="text-left py-2 px-3 sm:py-3 sm:px-4 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">MTI</th>
+                <th className="text-left py-2 px-3 sm:py-3 sm:px-4 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">Category</th>
+                <th className="text-left py-2 px-3 sm:py-3 sm:px-4 font-semibold text-slate-700 dark:text-slate-300">Meaning</th>
+                <th className="text-left py-2 px-3 sm:py-3 sm:px-4 font-semibold text-slate-700 dark:text-slate-300 hidden md:table-cell">Usage</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredData.map((item) => {
+                const category = getCategoryForMti(item.mti);
+                return (
+                  <tr
+                    key={item.mti}
+                    className="border-b border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
+                  >
+                    <td className="py-2 px-3 sm:py-3 sm:px-4 whitespace-nowrap">
+                      <span className="font-mono text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
+                        {item.mti}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 sm:py-3 sm:px-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 rounded-md text-xs font-medium ${getCategoryColor(category.color)}`}>
+                        {category.id.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 sm:py-3 sm:px-4 font-medium text-slate-800 dark:text-slate-200">
+                      {item.meaning}
+                    </td>
+                    <td className="py-2 px-3 sm:py-3 sm:px-4 text-slate-600 dark:text-slate-400 hidden md:table-cell">
+                      {item.usage}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {filteredData.length === 0 && (
-        <div className="text-center py-12 text-slate-500 dark:text-zinc-500">
-          <p>No MTI codes found matching your search.</p>
+        <div className="text-center py-8 sm:py-12 text-slate-500 dark:text-zinc-500">
+          <p className="text-sm sm:text-base">No MTI codes found matching your search.</p>
         </div>
       )}
 
       {/* Legend */}
-      <div className="mt-6 p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">MTI Structure</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600 dark:text-slate-400">
+      <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
+        <h3 className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 sm:mb-3">MTI Structure</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-1 sm:gap-4 text-[10px] sm:text-xs text-slate-600 dark:text-slate-400">
           <div>
             <p><span className="font-mono font-bold">D1</span> - Version (ISO 8583:1987 = 0, 1993 = 1, 2003 = 2)</p>
             <p><span className="font-mono font-bold">D2</span> - Message Class (01xx=Auth, 02xx=Financial, etc.)</p>

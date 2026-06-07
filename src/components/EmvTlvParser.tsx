@@ -300,8 +300,33 @@ const EmvTlvParser = ({ className = '' }) => {
 
   return (
     <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-3 sm:p-4 md:p-6 ${className}`}>
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .printable-area, .printable-area * {
+            visibility: visible;
+          }
+          .printable-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            padding: 20px;
+            background: white !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+          @page {
+            size: landscape;
+            margin: 0.5cm;
+          }
+        }
+      `}</style>
       {/* Header */}
-      <div className="mb-4 sm:mb-6">
+      <div className="mb-4 sm:mb-6 no-print">
         <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-slate-800 dark:text-white mb-1.5">EMV TLV Parser</h1>
         <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
           Parse EMV Tag-Length-Value (TLV) data from hex format
@@ -309,7 +334,7 @@ const EmvTlvParser = ({ className = '' }) => {
       </div>
 
       {/* Input Section */}
-      <div className="mb-4 sm:mb-6">
+      <div className="mb-4 sm:mb-6 no-print">
         <label className="block text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-medium mb-2">
           TLV Data (Hex)
         </label>
@@ -331,7 +356,7 @@ const EmvTlvParser = ({ className = '' }) => {
       </div>
 
       {/* Action Buttons */}
-      <div className="grid grid-cols-2 sm:flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
+      <div className="grid grid-cols-2 sm:flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6 no-print">
         <button
           onClick={handleParse}
           className="col-span-1 px-3 sm:px-4 py-2.5 bg-blue-600 text-white text-xs sm:text-xs md:text-sm rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors active:scale-[0.98]"
@@ -359,11 +384,20 @@ const EmvTlvParser = ({ className = '' }) => {
           <span className="hidden sm:inline">Download Excel</span>
           <span className="sm:hidden">Excel</span>
         </button>
+        <button
+          onClick={() => window.print()}
+          disabled={tlvData.length === 0}
+          className="col-span-1 px-3 sm:px-4 py-2.5 bg-red-600 text-white text-xs sm:text-xs md:text-sm rounded-md hover:bg-red-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors active:scale-[0.98]"
+          title={tlvData.length === 0 ? 'Parse TLV data before printing' : 'Print or save as PDF'}
+        >
+          <span className="hidden sm:inline">Download PDF</span>
+          <span className="sm:hidden">PDF</span>
+        </button>
       </div>
 
       {/* Statistics */}
       {tlvData.length > 0 && (
-        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
+        <div className="printable-area mb-4 sm:mb-6 p-3 sm:p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
           <h3 className="text-xs sm:text-xs md:text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 sm:mb-2">Statistics</h3>
           <div className="grid grid-cols-3 gap-2 sm:gap-6 text-xs sm:text-xs md:text-sm">
             <div>
@@ -384,7 +418,7 @@ const EmvTlvParser = ({ className = '' }) => {
 
       {/* Results Table */}
       {tlvData.length > 0 && (
-        <div className="border border-slate-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+        <div className="printable-area border border-slate-200 dark:border-zinc-800 rounded-lg overflow-hidden">
           <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
             <table className="w-full min-w-[300px] sm:min-w-[500px] md:min-w-[600px]">
               <thead className="bg-slate-50 dark:bg-zinc-900">
@@ -422,19 +456,6 @@ const EmvTlvParser = ({ className = '' }) => {
         </div>
       )}
 
-      {/* JSON Output */}
-      {tlvData.length > 0 && (
-        <details className="mt-4 sm:mt-6 group">
-          <summary className="cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 select-none">
-            View as JSON
-          </summary>
-          <div className="mt-3 -mx-3 sm:mx-0 px-3 sm:px-0">
-            <pre className="p-3 sm:p-4 bg-zinc-900 text-slate-100 rounded-lg overflow-x-auto text-xs sm:text-sm max-h-64">
-              {JSON.stringify(tlvData, null, 2)}
-            </pre>
-          </div>
-        </details>
-      )}
     </div>
   );
 };

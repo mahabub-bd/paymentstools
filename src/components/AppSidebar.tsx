@@ -127,12 +127,12 @@ export const AppSidebar = ({
         {!isMobile && (
           <button
             onClick={onToggle}
-            className={`absolute ${isOpen ? 'right-3 top-3' : '-right-3 top-1/2 -translate-y-1/2'} w-8 h-8 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-full flex items-center justify-center hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all duration-300 shadow-sm z-20`}
+            className={`absolute ${isOpen ? 'right-2 top-2' : 'right-2 bottom-2'} w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 hover:from-blue-600 hover:to-blue-700 dark:hover:from-blue-700 dark:hover:to-blue-800 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg shadow-blue-500/30 group border border-blue-400/20 dark:border-blue-500/30`}
             aria-label="Toggle sidebar"
             title="Toggle sidebar ([)"
           >
-            <svg className={`w-4 h-4 text-slate-600 dark:text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-0' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg className={`w-4 h-4 text-white transition-transform duration-500 ${isOpen ? 'rotate-180' : 'rotate-0'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
         )}

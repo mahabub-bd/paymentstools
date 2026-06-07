@@ -310,30 +310,30 @@ export function ThalesHsmCommands({ className = '' }: { className?: string }) {
   };
 
   return (
-    <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-6 ${className}`}>
+    <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-3 sm:p-4 md:p-6 ${className}`}>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white mb-2">
           Thales HSM Commands Reference
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 text-sm">
+        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
           Complete list of Thales Hardware Security Module commands with descriptions
         </p>
       </div>
 
       {/* Search */}
-      <div className="mb-4">
+      <div className="mb-3 sm:mb-4">
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search by command code, function, or notes..."
-          className="w-full px-4 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+          className="w-full px-3 py-2 sm:px-4 text-sm border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
         />
       </div>
 
       {/* Category Filters */}
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="mb-4 sm:mb-6 flex flex-wrap gap-1.5 sm:gap-2">
         {COMMAND_CATEGORIES.map(cat => {
           const count = cat.id === 'all' ? HSM_COMMANDS.length :
             cat.id === 'supported' ? HSM_COMMANDS.filter(c => c.supported).length :
@@ -347,7 +347,7 @@ export function ThalesHsmCommands({ className = '' }: { className?: string }) {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                 selectedCategory === cat.id
                   ? 'bg-blue-600 text-white dark:bg-blue-600 dark:text-white'
                   : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-zinc-700'
@@ -360,70 +360,113 @@ export function ThalesHsmCommands({ className = '' }: { className?: string }) {
       </div>
 
       {/* Results Count */}
-      <div className="mb-4 text-sm text-slate-600 dark:text-slate-400">
+      <div className="mb-3 sm:mb-4 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
         Showing {filteredCommands.length} of {HSM_COMMANDS.length} commands
       </div>
 
-      {/* Commands Table */}
-      <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-zinc-800">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
-              <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300 min-w-[120px]">Command</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300 min-w-[100px]">BP-HSM</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Function</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300 min-w-[150px]">Notes</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredCommands.map((cmd, idx) => (
-              <tr
-                key={`${cmd.command}-${idx}`}
-                className="border-b border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
-              >
-                <td className="py-3 px-4">
-                  <span className="font-mono text-lg font-bold text-blue-600 dark:text-blue-400">
+      {/* Commands Table - Card Layout on Mobile, Table on Larger Screens */}
+      <div className="rounded-lg border border-slate-200 dark:border-zinc-800 overflow-hidden">
+        {/* Mobile Card Layout */}
+        <div className="sm:hidden">
+          {filteredCommands.map((cmd, idx) => (
+            <div
+              key={`${cmd.command}-${idx}`}
+              className="p-3 border-b border-slate-200 dark:border-zinc-800 last:border-b-0 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
+            >
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div>
+                  <span className="font-mono text-base font-bold text-blue-600 dark:text-blue-400">
                     {cmd.command}
                   </span>
                   {cmd.response && (
-                    <span className="text-slate-500 dark:text-zinc-500 ml-2">
+                    <span className="text-slate-500 dark:text-zinc-500 text-xs ml-1">
                       ({cmd.response})
                     </span>
                   )}
-                </td>
-                <td className="py-3 px-4">
-                  {cmd.supported ? (
-                    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                      ✓ Yes
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-500">
-                      ✗ No
-                    </span>
-                  )}
-                </td>
-                <td className="py-3 px-4 text-slate-700 dark:text-slate-300">
-                  {cmd.function}
-                </td>
-                <td className="py-3 px-4 text-slate-500 dark:text-zinc-500 text-xs">
-                  {cmd.note || '-'}
-                </td>
+                </div>
+                {cmd.supported ? (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 shrink-0">
+                    ✓ Yes
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-500 shrink-0">
+                    ✗ No
+                  </span>
+                )}
+              </div>
+              <div className="text-slate-700 dark:text-slate-300 text-sm mb-1">
+                {cmd.function}
+              </div>
+              {cmd.note && (
+                <div className="text-slate-500 dark:text-zinc-500 text-xs">
+                  <span className="font-semibold">Note:</span> {cmd.note}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop Table Layout */}
+        <div className="hidden sm:block overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
+                <th className="text-left py-2 px-3 sm:py-3 sm:px-4 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap min-w-[100px]">Command</th>
+                <th className="text-left py-2 px-3 sm:py-3 sm:px-4 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap min-w-[80px]">BP-HSM</th>
+                <th className="text-left py-2 px-3 sm:py-3 sm:px-4 font-semibold text-slate-700 dark:text-slate-300">Function</th>
+                <th className="text-left py-2 px-3 sm:py-3 sm:px-4 font-semibold text-slate-700 dark:text-slate-300 hidden lg:table-cell min-w-[120px]">Notes</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredCommands.map((cmd, idx) => (
+                <tr
+                  key={`${cmd.command}-${idx}`}
+                  className="border-b border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
+                >
+                  <td className="py-2 px-3 sm:py-3 sm:px-4 whitespace-nowrap">
+                    <span className="font-mono text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
+                      {cmd.command}
+                    </span>
+                    {cmd.response && (
+                      <span className="text-slate-500 dark:text-zinc-500 text-xs ml-1 sm:ml-2">
+                        ({cmd.response})
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-2 px-3 sm:py-3 sm:px-4 whitespace-nowrap">
+                    {cmd.supported ? (
+                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                        ✓ Yes
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-500">
+                        ✗ No
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-2 px-3 sm:py-3 sm:px-4 text-slate-700 dark:text-slate-300">
+                    {cmd.function}
+                  </td>
+                  <td className="py-2 px-3 sm:py-3 sm:px-4 text-slate-500 dark:text-zinc-500 text-xs hidden lg:table-cell">
+                    {cmd.note || '-'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {filteredCommands.length === 0 && (
-        <div className="text-center py-12 text-slate-500 dark:text-zinc-500">
-          <p>No HSM commands found matching your search.</p>
+        <div className="text-center py-8 sm:py-12 text-slate-500 dark:text-zinc-500">
+          <p className="text-sm sm:text-base">No HSM commands found matching your search.</p>
         </div>
       )}
 
       {/* Legend */}
-      <div className="mt-6 p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Command Format</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600 dark:text-slate-400">
+      <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
+        <h3 className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 sm:mb-3">Command Format</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-1 sm:gap-4 text-[10px] sm:text-xs text-slate-600 dark:text-slate-400">
           <div>
             <p><span className="font-mono font-bold">A0</span> - Host Request Command</p>
             <p><span className="font-mono font-bold">A1</span> - Host Response Command (last char +1)</p>
@@ -436,7 +479,7 @@ export function ThalesHsmCommands({ className = '' }: { className?: string }) {
       </div>
 
       {/* Source */}
-      <div className="mt-4 text-xs text-slate-400 dark:text-zinc-600 text-center">
+      <div className="mt-4 text-[10px] sm:text-xs text-slate-400 dark:text-zinc-600 text-center">
         Source: <a href="https://www.eftlab.com/knowledge-base/complete-list-of-thales-hsm-commands" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">EFT Lab</a>
       </div>
     </div>

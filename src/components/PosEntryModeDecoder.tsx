@@ -138,20 +138,20 @@ const PosEntryModeDecoder = ({ className = '' }) => {
   };
 
   return (
-    <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-6 ${className}`}>
+    <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-3 sm:p-4 md:p-6 ${className}`}>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white mb-2">
           POS Entry Mode Decoder
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 text-sm">
+        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
           Decode ISO 8583 Field 22 - Point of Service Entry Mode (DE 22)
         </p>
       </div>
 
       {/* Input Section */}
-      <div className="mb-6">
-        <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
+      <div className="mb-4 sm:mb-6">
+        <label className="block text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-medium mb-2">
           POS Entry Mode Code (3 digits)
         </label>
         <input
@@ -162,13 +162,13 @@ const PosEntryModeDecoder = ({ className = '' }) => {
           className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
           maxLength={3}
         />
-        <p className="mt-2 text-xs text-slate-500 dark:text-zinc-500">
+        <p className="mt-2 text-[10px] sm:text-xs text-slate-500 dark:text-zinc-500">
           Format: Card Entry Mode (2) + PIN Capability (1)
         </p>
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 mb-6">
+      <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
         <button
           onClick={handleDecode}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm font-medium"
@@ -184,22 +184,23 @@ const PosEntryModeDecoder = ({ className = '' }) => {
       </div>
 
       {/* Quick Load Presets */}
-      <div className="mb-6">
-        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
+      <div className="mb-4 sm:mb-6">
+        <label className="block text-[10px] sm:text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
           Quick Load Common Codes:
         </label>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
           {Object.entries(COMMON_CODES).map(([key, { code, description }]) => (
             <button
               key={key}
               onClick={() => handleLoadExample(key)}
-              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${
+              className={`px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs rounded-md border transition-colors ${
                 input === code
                   ? 'bg-blue-600 text-white border-blue-600'
                   : 'bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800'
               }`}
             >
-              {code}: {description}
+              <span className="hidden xs:inline">{code}: {description}</span>
+              <span className="xs:hidden">{code}</span>
             </button>
           ))}
         </div>
@@ -207,65 +208,65 @@ const PosEntryModeDecoder = ({ className = '' }) => {
 
       {/* Decoded Result */}
       {decoded && (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* Full Description */}
-          <div className={`p-4 rounded-lg border ${getEntryModeColor(input)}`}>
-            <label className="text-xs font-semibold uppercase tracking-wide opacity-70">
+          <div className={`p-3 sm:p-4 rounded-lg border ${getEntryModeColor(input)}`}>
+            <label className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide opacity-70">
               Decoded Value
             </label>
-            <p className="text-lg font-bold mt-1">{decoded.fullDescription}</p>
+            <p className="text-base sm:text-lg font-bold mt-1">{decoded.fullDescription}</p>
           </div>
 
           {/* Breakdown Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {/* Card Entry Mode */}
-            <div className="p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
+            <div className="p-3 sm:p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                <label className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400">
                   Positions 1-2: Card Entry Mode
                 </label>
-                <span className="font-mono text-lg font-bold text-blue-600 dark:text-blue-400">
+                <span className="font-mono text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
                   {input.padStart(3, '0').slice(0, 2)}
                 </span>
               </div>
-              <p className="text-sm text-slate-800 dark:text-slate-200">{decoded.cardEntryMode}</p>
+              <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200">{decoded.cardEntryMode}</p>
             </div>
 
             {/* PIN Capability */}
-            <div className="p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
+            <div className="p-3 sm:p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                <label className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400">
                   Position 3: PIN Capability
                 </label>
-                <span className="font-mono text-lg font-bold text-blue-600 dark:text-blue-400">
+                <span className="font-mono text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
                   {input.padStart(3, '0')[2]}
                 </span>
               </div>
-              <p className="text-sm text-slate-800 dark:text-slate-200">{decoded.pinCap}</p>
+              <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200">{decoded.pinCap}</p>
             </div>
           </div>
 
           {/* Visual Breakdown */}
-          <div className="p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
-            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-3 block">
+          <div className="p-3 sm:p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
+            <label className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2 sm:mb-3 block">
               Visual Breakdown
             </label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 sm:gap-3">
               <div className="flex-[2] text-center">
-                <div className="bg-white dark:bg-black border-2 border-blue-500 rounded-lg p-3">
-                  <span className="font-mono text-lg font-bold text-blue-600 dark:text-blue-400">
+                <div className="bg-white dark:bg-black border-2 border-blue-500 rounded-lg p-2 sm:p-3">
+                  <span className="font-mono text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
                     {input.padStart(3, '0').slice(0, 2)}
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-500 dark:text-zinc-500 mt-1 truncate">Card Entry Mode</p>
+                <p className="text-[9px] sm:text-[10px] text-slate-500 dark:text-zinc-500 mt-1 truncate">Card Entry Mode</p>
               </div>
               <div className="flex-1 text-center">
-                <div className="bg-white dark:bg-black border-2 border-blue-500 rounded-lg p-3">
-                  <span className="font-mono text-lg font-bold text-blue-600 dark:text-blue-400">
+                <div className="bg-white dark:bg-black border-2 border-blue-500 rounded-lg p-2 sm:p-3">
+                  <span className="font-mono text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
                     {input.padStart(3, '0')[2]}
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-500 dark:text-zinc-500 mt-1 truncate">PIN</p>
+                <p className="text-[9px] sm:text-[10px] text-slate-500 dark:text-zinc-500 mt-1 truncate">PIN</p>
               </div>
             </div>
           </div>
@@ -273,15 +274,15 @@ const PosEntryModeDecoder = ({ className = '' }) => {
       )}
 
       {/* Reference Tables */}
-      <div className="mt-6 border border-slate-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+      <div className="mt-4 sm:mt-6 border border-slate-200 dark:border-zinc-800 rounded-lg overflow-hidden">
         {/* Header with Search */}
-        <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-zinc-900 dark:to-zinc-900/50 px-4 py-3 border-b border-slate-200 dark:border-zinc-800">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-              <span className="text-lg">📖</span>
+        <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-zinc-900 dark:to-zinc-900/50 px-3 sm:px-4 py-2 sm:py-3 border-b border-slate-200 dark:border-zinc-800">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <h3 className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <span className="text-base sm:text-lg">📖</span>
               Reference Tables
             </h3>
-            <span className="text-xs text-slate-500 dark:text-zinc-500">
+            <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-500">
               {Object.keys(CARD_ENTRY_MODES).length + Object.keys(PIN_CAPABILITY).length + Object.keys(POS_ENTRY_CODES).length} total codes
             </span>
           </div>
@@ -298,47 +299,50 @@ const PosEntryModeDecoder = ({ className = '' }) => {
         <div className="flex border-b border-slate-200 dark:border-zinc-800 bg-white dark:bg-black">
           <button
             onClick={() => setActiveTab('common')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+            className={`flex-1 px-2 sm:px-3 py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors border-b-2 ${
               activeTab === 'common'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                 : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-zinc-900'
             }`}
           >
-            Common Codes
-            <span className="ml-2 px-2 py-0.5 text-xs bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 rounded-full">
+            <span className="hidden sm:inline">Common Codes</span>
+            <span className="sm:hidden">Common</span>
+            <span className="ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 rounded-full">
               {Object.keys(POS_ENTRY_CODES).length}
             </span>
           </button>
           <button
             onClick={() => setActiveTab('card')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+            className={`flex-1 px-2 sm:px-3 py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors border-b-2 ${
               activeTab === 'card'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                 : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-zinc-900'
             }`}
           >
-            Card Entry Modes
-            <span className="ml-2 px-2 py-0.5 text-xs bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 rounded-full">
+            <span className="hidden sm:inline">Card Entry Modes</span>
+            <span className="sm:hidden">Card Entry</span>
+            <span className="ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 rounded-full">
               {Object.keys(CARD_ENTRY_MODES).length}
             </span>
           </button>
           <button
             onClick={() => setActiveTab('pin')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+            className={`flex-1 px-2 sm:px-3 py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors border-b-2 ${
               activeTab === 'pin'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                 : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-zinc-900'
             }`}
           >
-            PIN Capability
-            <span className="ml-2 px-2 py-0.5 text-xs bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 rounded-full">
+            <span className="hidden sm:inline">PIN Capability</span>
+            <span className="sm:hidden">PIN</span>
+            <span className="ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 rounded-full">
               {Object.keys(PIN_CAPABILITY).length}
             </span>
           </button>
         </div>
 
         {/* Tab Content */}
-        <div className="max-h-80 overflow-y-auto">
+        <div className="max-h-64 sm:max-h-80 overflow-y-auto">
           {activeTab === 'common' && (
             <div className="divide-y divide-slate-100 dark:divide-zinc-900">
               {Object.entries(POS_ENTRY_CODES)
@@ -354,21 +358,21 @@ const PosEntryModeDecoder = ({ className = '' }) => {
                   return (
                     <div
                       key={code}
-                      className={`px-4 py-3 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors ${code === input ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                      className={`px-3 py-2 sm:px-4 sm:py-3 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors ${code === input ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className={`px-2 py-1 rounded font-mono text-sm font-bold ${colorClass}`}>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                          <span className={`px-2 py-1 rounded font-mono text-xs sm:text-sm font-bold shrink-0 ${colorClass}`}>
                             {code}
                           </span>
-                          <span className="text-sm text-slate-700 dark:text-slate-300">{desc}</span>
+                          <span className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 truncate">{desc}</span>
                         </div>
                         <button
                           onClick={() => {
                             setInput(code);
                             setDecoded(decodePosEntryMode(code));
                           }}
-                          className="px-3 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-md transition-colors"
+                          className="px-2 py-1 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-md transition-colors shrink-0"
                         >
                           Use
                         </button>
@@ -392,14 +396,14 @@ const PosEntryModeDecoder = ({ className = '' }) => {
                   return (
                     <div
                       key={code}
-                      className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
+                      className="px-3 py-2 sm:px-4 sm:py-3 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className={`px-2 py-1 rounded font-mono text-sm font-bold ${colorClass}`}>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                          <span className={`px-2 py-1 rounded font-mono text-xs sm:text-sm font-bold shrink-0 ${colorClass}`}>
                             {code}
                           </span>
-                          <span className="text-sm text-slate-700 dark:text-slate-300">{desc}</span>
+                          <span className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 truncate">{desc}</span>
                         </div>
                       </div>
                     </div>
@@ -419,14 +423,14 @@ const PosEntryModeDecoder = ({ className = '' }) => {
                 .map(([code, desc]) => (
                   <div
                     key={code}
-                    className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
+                    className="px-3 py-2 sm:px-4 sm:py-3 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="px-2 py-1 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 font-mono text-sm font-bold">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <span className="px-2 py-1 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 font-mono text-xs sm:text-sm font-bold shrink-0">
                           {code}
                         </span>
-                        <span className="text-sm text-slate-700 dark:text-slate-300">{desc}</span>
+                        <span className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 truncate">{desc}</span>
                       </div>
                     </div>
                   </div>
