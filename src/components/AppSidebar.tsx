@@ -118,7 +118,7 @@ export const AppSidebar = ({
         ref={sidebarRef}
         className={`${isMobile
           ? `fixed inset-y-0 left-0 z-40 w-80 max-w-[85vw] transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`
-          : `${isOpen ? 'w-80' : 'w-16'} relative`
+          : `${isOpen ? 'w-80' : 'w-16'} h-full relative`
           } bg-white dark:bg-zinc-950 border-r border-slate-200 dark:border-zinc-800 transition-all duration-300 ease-in-out flex flex-col shadow-sm overflow-x-clip`}
       >
       {/* Sidebar Header */}

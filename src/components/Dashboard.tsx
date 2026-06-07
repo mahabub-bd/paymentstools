@@ -1,18 +1,20 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
-import { Routes, Route, useNavigate, useLocation, Link } from 'react-router-dom';
+import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { useTheme } from '../contexts/ThemeContext';
+import type { MenuItem } from '../data';
+import { menuItems, TOOL_CATEGORIES } from '../data';
 import { animationStyles } from './AppAnimations';
 import { AppFooter } from './AppFooter';
 import { AppHeader } from './AppHeader';
 import { AppSidebar } from './AppSidebar';
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
 import { LoadingScreen } from './LoadingScreen';
-import { useTheme } from '../contexts/ThemeContext';
-import { menuItems, TOOL_CATEGORIES } from '../data';
-import type { MenuItem } from '../data';
 
 const CardGenerator = lazy(() => import('./CardGenerator'));
 const ConverterTools = lazy(() => import('./ConverterTools'));
 const EmvTlvParser = lazy(() => import('./EmvTlvParser'));
+const EmvTlvBuilder = lazy(() => import('./EmvTlvBuilder'));
+const TrackGenerator = lazy(() => import('./TrackGenerator'));
 const Iso8583VersionParser = lazy(() => import('./Iso8583VersionParser'));
 const IsoBitmapEditor = lazy(() => import('./IsoBitmapEditor'));
 const MtiReference = lazy(() => import('./MtiReference'));
@@ -190,7 +192,7 @@ const Dashboard = () => {
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-black dark:to-zinc-950 overflow-hidden">
       {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:block h-full">
         <AppSidebar
           isOpen={sidebarOpen}
           searchQuery={searchQuery}
@@ -251,6 +253,7 @@ const Dashboard = () => {
                 <Route path="/maccalculator" element={<Iso8583MacCalculator />} />
                 <Route path="/thaleshsm" element={<ThalesHsmCommands />} />
                 <Route path="/tlv" element={<EmvTlvParser />} />
+                <Route path="/tlvbuilder" element={<EmvTlvBuilder />} />
                 <Route path="/emvtags" element={<EmvNfcTags />} />
                 <Route path="/emvrid" element={<EmvRIDReference />} />
                 <Route path="/emvcryptogram" element={<EmvCryptogramCalculator />} />
@@ -265,6 +268,7 @@ const Dashboard = () => {
                 <Route path="/visapvv" element={<VisaPVV />} />
                 <Route path="/cvvcalc" element={<CvvCalculator />} />
                 <Route path="/cardgen" element={<CardGenerator />} />
+                <Route path="/trackgen" element={<TrackGenerator />} />
                 <Route path="/servicecode" element={<ServiceCodeList />} />
                 <Route path="/converter" element={<ConverterTools />} />
                 <Route path="/mcclist" element={<MccList />} />
