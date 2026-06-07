@@ -12,39 +12,59 @@ export const HomePageHeader = ({ loaded, totalVisibleTools }: HomePageHeaderProp
   return (
     <>
       <style>{`
-        @keyframes bounce-subtle {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-5px); }
+        @keyframes header-slide {
+          0% { transform: translateY(-20px); opacity: 0; }
+          100% { transform: translateY(0); opacity: 1; }
         }
-        .animate-bounce-subtle { animation: bounce-subtle 2s ease-in-out infinite; }
+        .animate-header-slide {
+          animation: header-slide 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .glass-header {
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+        }
       `}</style>
 
-      <div className={`max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 transition-all duration-700 ${loaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-600/30 animate-bounce-subtle flex-shrink-0">
-              <span className="text-white text-xs sm:text-sm lg:text-base font-bold">PT</span>
+      <div className={`glass-header fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${loaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+        <div className="border-b border-slate-200/50 dark:border-zinc-800/50 bg-white/70 dark:bg-zinc-900/70">
+          <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-2">
+            <div className="flex items-center justify-between gap-3">
+              {/* Logo & Brand */}
+              <Link to="/" className="flex items-center gap-2 group">
+                <div className="relative w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-md shadow-blue-600/20 group-hover:shadow-lg group-hover:shadow-blue-600/30 transition-all duration-300 group-hover:scale-105">
+                  <span className="text-white text-xs font-bold">PT</span>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </div>
+                <div className="hidden sm:block">
+                  <h1 className="text-sm font-bold text-slate-900 dark:text-white">Payment Tools</h1>
+                </div>
+              </Link>
+
+              {/* Right Actions */}
+              <div className="flex items-center gap-2">
+                {/* Launch Button */}
+                <Link
+                  to="/app/bitmap"
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-xs font-medium rounded-lg shadow-md shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-300 hover:scale-105"
+                >
+                  <span>Launch</span>
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </Link>
+
+                {/* Theme Toggle */}
+                <button
+                  onClick={toggleTheme}
+                  className="p-1.5 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 hover:border-slate-300 dark:hover:border-zinc-600 shadow-sm transition-all duration-300 hover:scale-110 group"
+                  title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                >
+                  <span className="text-xs block transition-transform duration-300 group-hover:rotate-12">
+                    {theme === 'dark' ? '🌙' : '☀️'}
+                  </span>
+                </button>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h1 className="text-sm sm:text-base lg:text-lg font-bold text-slate-900 dark:text-white truncate">Payment Tools</h1>
-              <p className="text-[9px] sm:text-[10px] lg:text-xs text-slate-500 dark:text-slate-400 truncate hidden xs:block">Payment Industry Developer Tools</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <Link
-              to="/app/bitmap"
-              className="px-2.5 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] sm:text-xs lg:text-sm font-medium rounded-lg shadow-lg shadow-blue-600/30 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-600/40"
-            >
-              <span className="hidden sm:inline">Launch App</span>
-              <span className="sm:hidden">Launch</span>
-            </Link>
-            <button
-              onClick={toggleTheme}
-              className="p-1 sm:p-1.5 lg:p-2 rounded-lg bg-white dark:bg-zinc-900 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110 hover:rotate-12"
-              title="Toggle dark mode"
-            >
-              <span className="text-xs sm:text-sm lg:text-base">{theme === 'dark' ? '🌙' : '☀️'}</span>
-            </button>
           </div>
         </div>
       </div>
