@@ -1,4 +1,4 @@
-import { Analytics } from 'node_modules/@vercel/analytics/dist/nuxt/runtime'
+import { Analytics } from '@vercel/analytics/react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import './App.css'
 import Dashboard from './components/Dashboard'
