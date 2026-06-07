@@ -256,22 +256,27 @@ const IsoBitmapEditor = ({ className = '' }) => {
 
   const getBitValue = (index: number) => currentBitmap[index] === '1';
 
-  // Grid layout: 16 rows × 4 columns
+  // Grid layout: Responsive based on screen size
   const renderBitmapGrid = () => {
     const rows = [];
     const offset = activeTab === 'second' ? 64 : 0;
+    // Mobile: 2 columns per row (32 rows), Tablet: 3 columns (22 rows), Desktop: 4 columns (16 rows)
+    const columnsPerRow = 4;
+    const totalRows = Math.ceil(64 / columnsPerRow);
 
-    for (let row = 0; row < 16; row++) {
+    for (let row = 0; row < totalRows; row++) {
       const bitsInRow = [];
-      for (let col = 0; col < 6; col++) {
-        const bitIndex = row + (col * 16);
+      for (let col = 0; col < columnsPerRow; col++) {
+        const bitIndex = row + (col * totalRows);
+        if (bitIndex >= 64) break;
+
         const fieldNumber = bitIndex + 1 + offset;
         const fieldInfo = ISO8583_FIELDS[fieldNumber] || { name: 'Reserved', format: '-', description: 'Reserved field' };
 
         bitsInRow.push(
           <label
             key={bitIndex}
-            className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all border ${getBitValue(bitIndex)
+            className={`flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-lg cursor-pointer transition-all border ${getBitValue(bitIndex)
               ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700'
               : 'bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700'
               }`}
@@ -280,21 +285,21 @@ const IsoBitmapEditor = ({ className = '' }) => {
               type="checkbox"
               checked={getBitValue(bitIndex)}
               onChange={() => handleBitToggle(bitIndex)}
-              className="w-4 h-4 rounded border-slate-300 dark:border-zinc-600 dark:bg-zinc-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+              className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-slate-300 dark:border-zinc-600 dark:bg-zinc-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer shrink-0"
             />
-            <div className="flex flex-col ">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
+            <div className="flex flex-col min-w-0 flex-1">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className="font-mono text-[10px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 shrink-0">
                   [{String(fieldNumber).padStart(3, '0')}]
                 </span>
-                <span className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
+                <span className="text-[10px] sm:text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
                   {fieldInfo.name}
                 </span>
               </div>
               {showFieldNames && (
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-[10px] text-slate-500 dark:text-zinc-500">{fieldInfo.format}</span>
-                  <span className="text-[10px] text-slate-400 dark:text-zinc-600 truncate ">
+                <div className="flex items-center gap-0.5 sm:gap-1 mt-0.5">
+                  <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-zinc-500 shrink-0">{fieldInfo.format}</span>
+                  <span className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-600 truncate">
                     {fieldInfo.description}
                   </span>
                 </div>
@@ -304,7 +309,7 @@ const IsoBitmapEditor = ({ className = '' }) => {
         );
       }
       rows.push(
-        <div key={row} className="grid grid-cols-6 gap-2">
+        <div key={row} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 sm:gap-2">
           {bitsInRow}
         </div>
       );
@@ -313,54 +318,54 @@ const IsoBitmapEditor = ({ className = '' }) => {
   };
 
   return (
-    <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-6 ${className}`}>
+    <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-3 sm:p-4 md:p-6 ${className}`}>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-800 dark:text-white mb-1 sm:mb-2">
           ISO 8583 Bitmap Editor
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 text-sm">
+        <p className="text-slate-600 dark:text-slate-400 text-[11px] sm:text-xs md:text-sm">
           Edit the 64-bit ISO 8583 message bitmap with field descriptions
         </p>
       </div>
 
       {/* MTI Selector */}
-      <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-        <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-3">Message Type Indicator (MTI)</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+      <div className="mb-4 sm:mb-6 p-2.5 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <h3 className="text-xs sm:text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2 sm:mb-3">Message Type Indicator (MTI)</h3>
+        <div className="grid grid-cols-2 gap-1.5 sm:gap-2 mb-2 sm:mb-3">
           {/* Version */}
           <div>
-            <label className="block text-[10px] text-slate-600 dark:text-slate-400 mb-1">Version</label>
+            <label className="block text-[9px] sm:text-[10px] text-slate-600 dark:text-slate-400 mb-0.5 sm:mb-1">Version</label>
             <select
               value={mti[0]}
               onChange={(e) => setMti(e.target.value + mti.slice(1))}
-              className="w-full px-2 py-1.5 text-sm border border-slate-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100"
+              className="w-full px-1.5 sm:px-2 py-1 sm:py-1.5 text-[11px] sm:text-sm border border-slate-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100"
             >
               {MTI_VERSIONS.map(v => (
-                <option key={v} value={v}>{v} - {v === '0' ? 'ISO 8583-1:1987' : v === '1' ? 'ISO 8583-1:1993' : v === '2' ? 'ISO 8583-1:2003' : 'ISO 8583-1:2003+'}</option>
+                <option key={v} value={v}>{v} - {v === '0' ? '1987' : v === '1' ? '1993' : v === '2' ? '2003' : '2003+'}</option>
               ))}
             </select>
           </div>
           {/* Class */}
           <div>
-            <label className="block text-[10px] text-slate-600 dark:text-slate-400 mb-1">Class</label>
+            <label className="block text-[9px] sm:text-[10px] text-slate-600 dark:text-slate-400 mb-0.5 sm:mb-1">Class</label>
             <select
               value={mti[1]}
               onChange={(e) => setMti(mti[0] + e.target.value + mti.slice(2))}
-              className="w-full px-2 py-1.5 text-sm border border-slate-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100"
+              className="w-full px-1.5 sm:px-2 py-1 sm:py-1.5 text-[11px] sm:text-sm border border-slate-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100"
             >
               {MTI_CLASSES.map(c => (
-                <option key={c} value={c}>{c} - {c === '1' ? 'Authorization' : 'Financial'}</option>
+                <option key={c} value={c}>{c} - {c === '1' ? 'Auth' : 'Fin'}</option>
               ))}
             </select>
           </div>
           {/* Function */}
-          <div>
-            <label className="block text-[10px] text-slate-600 dark:text-slate-400 mb-1">Function</label>
+          <div className="col-span-2">
+            <label className="block text-[9px] sm:text-[10px] text-slate-600 dark:text-slate-400 mb-0.5 sm:mb-1">Function</label>
             <select
               value={mti.slice(2, 4)}
               onChange={(e) => setMti(mti.slice(0, 2) + e.target.value)}
-              className="w-full px-2 py-1.5 text-sm border border-slate-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100"
+              className="w-full px-1.5 sm:px-2 py-1 sm:py-1.5 text-[11px] sm:text-sm border border-slate-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100"
             >
               <option value="00">00 - Request</option>
               <option value="01">01 - Request (Repeat)</option>
@@ -369,61 +374,58 @@ const IsoBitmapEditor = ({ className = '' }) => {
               <option value="11">11 - Response (Repeat)</option>
               <option value="12">12 - Response (Partial)</option>
               <option value="20">20 - Advice Request</option>
-              <option value="21">21 - Advice Request (Repeat)</option>
-              <option value="22">22 - Advice Request (Partial)</option>
+              <option value="21">21 - Advice (Repeat)</option>
+              <option value="22">22 - Advice (Partial)</option>
               <option value="30">30 - Advice Response</option>
-              <option value="31">31 - Advice Response (Repeat)</option>
-              <option value="32">32 - Advice Response (Partial)</option>
-              <option value="40">40 - Notification Request</option>
-              <option value="41">41 - Notification Request (Repeat)</option>
-              <option value="42">42 - Notification Request (Partial)</option>
-              <option value="43">43 - Notification Response</option>
+              <option value="31">31 - Advice Resp (R)</option>
+              <option value="32">32 - Advice Resp (P)</option>
             </select>
           </div>
-          {/* MTI Display */}
-          <div>
-            <label className="block text-[10px] text-slate-600 dark:text-slate-400 mb-1">MTI Value</label>
-            <input
-              type="text"
-              value={mti}
-              onChange={(e) => setMti(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
-              className="w-full px-2 py-1.5 text-sm border border-slate-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 font-mono text-center"
-              maxLength={4}
-            />
-          </div>
         </div>
-        <p className="text-xs text-slate-600 dark:text-slate-400">
-          {MTI_DESCRIPTIONS[mti] || 'Custom MTI'}: <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{mti}</span>
-        </p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400">
+            {MTI_DESCRIPTIONS[mti] || 'Custom MTI'}
+          </p>
+          <input
+            type="text"
+            value={mti}
+            onChange={(e) => setMti(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
+            className="px-2 py-1 text-[11px] sm:text-sm border border-slate-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 font-mono text-center w-16 sm:w-20"
+            maxLength={4}
+          />
+        </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-6 mb-6 border-b border-slate-200 dark:border-zinc-800">
+      <div className="flex gap-4 sm:gap-6 mb-4 sm:mb-6 border-b border-slate-200 dark:border-zinc-800">
         <button
           onClick={() => setActiveTab('first')}
-          className={`pb-2 px-1 text-base font-medium transition-colors ${activeTab === 'first'
+          className={`pb-1.5 sm:pb-2 px-1 text-sm sm:text-base font-medium transition-colors ${activeTab === 'first'
             ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
             : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
         >
-          Primary Bitmap (Fields 1-64)
+          <span className="hidden sm:inline">Primary</span>
+          <span className="sm:hidden">Fields 1-64</span>
+          <span className="hidden sm:inline ml-1">Bitmap (Fields 1-64)</span>
         </button>
         <button
           onClick={() => setActiveTab('second')}
-          className={`pb-2 px-1 text-base font-medium transition-colors ${activeTab === 'second'
+          className={`pb-1.5 sm:pb-2 px-1 text-sm sm:text-base font-medium transition-colors ${activeTab === 'second'
             ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
             : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
         >
-          Secondary Bitmap (Fields 65-128)
+          <span className="hidden sm:inline">Secondary</span>
+          <span className="sm:hidden">Fields 65-128</span>
+          <span className="hidden sm:inline ml-1">Bitmap (Fields 65-128)</span>
         </button>
       </div>
 
       {/* Input Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <div>
-          <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
+          <label className="block text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-medium mb-1 sm:mb-2">
             Hexadecimal Bitmap
           </label>
           <input
@@ -431,12 +433,12 @@ const IsoBitmapEditor = ({ className = '' }) => {
             value={hexRepresentation}
             onChange={handleHexInput}
             placeholder="Enter 16-digit hex string"
-            className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
+            className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-[11px] sm:text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
             maxLength={35}
           />
         </div>
         <div>
-          <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
+          <label className="block text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-medium mb-1 sm:mb-2">
             Binary Bitmap
           </label>
           <input
@@ -444,54 +446,54 @@ const IsoBitmapEditor = ({ className = '' }) => {
             value={currentBitmap}
             onChange={handleInputChange}
             placeholder="Enter 64-bit binary string"
-            className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
+            className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-[11px] sm:text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
             maxLength={64}
           />
         </div>
       </div>
 
       {/* View Options */}
-      <div className="flex items-center gap-4 mb-4">
-        <label className="flex items-center gap-2 cursor-pointer">
+      <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+        <label className="flex items-center gap-1.5 sm:gap-2 cursor-pointer">
           <input
             type="checkbox"
             checked={showFieldNames}
             onChange={(e) => setShowFieldNames(e.target.checked)}
-            className="w-4 h-4 rounded border-slate-300 dark:border-zinc-600 dark:bg-zinc-800 text-blue-600 focus:ring-blue-500"
+            className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-slate-300 dark:border-zinc-600 dark:bg-zinc-800 text-blue-600 focus:ring-blue-500"
           />
-          <span className="text-sm text-slate-700 dark:text-slate-300">Show field descriptions</span>
+          <span className="text-xs sm:text-sm text-slate-700 dark:text-slate-300">Show field descriptions</span>
         </label>
       </div>
 
       {/* Bitmap Grid */}
-      <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg p-4 mb-6">
-        <div className="flex flex-col gap-2">
+      <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg p-2 sm:p-3 md:p-4 mb-4 sm:mb-6">
+        <div className="flex flex-col gap-1.5 sm:gap-2">
           {renderBitmapGrid()}
         </div>
       </div>
 
       {/* Selected Fields Summary */}
       {selectedFields.length > 0 && (
-        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-          <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-3">
+        <div className="mb-4 sm:mb-6 p-2.5 sm:p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <h3 className="text-xs sm:text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2 sm:mb-3">
             Selected Fields ({selectedFields.length})
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 2xl:grid-cols-6 gap-2 max-h-48 overflow-y-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5 sm:gap-2 max-h-32 sm:max-h-48 overflow-y-auto">
             {selectedFields.map(field => {
               const fieldInfo = ISO8583_FIELDS[field] || { name: 'Reserved', format: '-', description: '' };
               return (
                 <div
                   key={field}
-                  className="flex items-center gap-2 p-2 bg-white dark:bg-zinc-900 rounded border border-blue-100 dark:border-blue-900"
+                  className="flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-white dark:bg-zinc-900 rounded border border-blue-100 dark:border-blue-900"
                 >
-                  <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 shrink-0">
+                  <span className="font-mono text-[10px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 shrink-0">
                     [{String(field).padStart(3, '0')}]
                   </span>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
+                    <span className="text-[10px] sm:text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
                       {fieldInfo.name}
                     </span>
-                    <span className="text-[10px] text-slate-500 dark:text-zinc-500">
+                    <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-zinc-500">
                       {fieldInfo.format}
                     </span>
                   </div>
@@ -503,22 +505,23 @@ const IsoBitmapEditor = ({ className = '' }) => {
       )}
 
       {/* Summary */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg">
-        <div className="flex items-center gap-4 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4 p-2.5 sm:p-4 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg">
+        <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs md:text-sm">
           <span className="text-slate-600 dark:text-slate-400">
             Set bits: <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{currentBitmap.split('1').length - 1}</span> / 64
           </span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1.5 sm:gap-2">
           <button
             onClick={handleSelectCommon}
-            className="px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 rounded hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors"
+            className="px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 rounded hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors"
           >
-            Select Common Fields
+            <span className="hidden sm:inline">Select Common</span>
+            <span className="sm:hidden">Common</span>
           </button>
           <button
             onClick={handleClear}
-            className="px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 rounded hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors"
+            className="px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 rounded hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors"
           >
             Clear All
           </button>

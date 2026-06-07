@@ -7,6 +7,8 @@ import { AppSidebar } from './AppSidebar';
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
 import { LoadingScreen } from './LoadingScreen';
 import { useTheme } from '../contexts/ThemeContext';
+import { menuItems, TOOL_CATEGORIES } from '../data';
+import type { MenuItem } from '../data';
 
 const CardGenerator = lazy(() => import('./CardGenerator'));
 const ConverterTools = lazy(() => import('./ConverterTools'));
@@ -36,55 +38,6 @@ const TerminalCapabilitiesDecoder = lazy(() => import('./TerminalCapabilitiesDec
 const KnowledgeBase = lazy(() => import('./KnowledgeBase'));
 const AidList = lazy(() => import('./AidList'));
 
-// Tool categories
-const TOOL_CATEGORIES = {
-  iso8583: { id: 'iso8583', label: 'ISO 8583', icon: '📡', color: 'blue' },
-  emv: { id: 'emv', label: 'EMV', icon: '💳', color: 'green' },
-  pin: { id: 'pin', label: 'PIN Tools', icon: '🔐', color: 'purple' },
-  reference: { id: 'reference', label: 'Reference', icon: '📚', color: 'amber' },
-  utilities: { id: 'utilities', label: 'Utilities', icon: '🔧', color: 'slate' },
-} as const;
-
-type MenuItem = {
-  id: string;
-  label: string;
-  icon: string;
-  category: string;
-  description: string;
-  shortcut: string;
-};
-
-// Menu items
-const menuItems: MenuItem[] = [
-  { id: 'bitmap', label: 'Bitmap Editor', icon: '🔢', category: 'iso8583', description: 'Create and edit ISO 8583 bitmaps', shortcut: '1' },
-  { id: 'parser', label: 'Message Parser', icon: '📨', category: 'iso8583', description: 'Parse ISO 8583 messages', shortcut: '2' },
-  { id: 'mtireference', label: 'MTI Reference', icon: '📋', category: 'iso8583', description: 'ISO 8583 Message Type Identifier codes', shortcut: '3' },
-  { id: 'maccalculator', label: 'MAC Calculator', icon: '🔐', category: 'iso8583', description: 'Calculate ISO 8583 MAC', shortcut: 'm' },
-  { id: 'thaleshsm', label: 'Thales HSM', icon: '🔒', category: 'iso8583', description: 'Thales HSM Commands Reference', shortcut: '4' },
-  { id: 'posentry', label: 'POS Entry Mode', icon: '🖥️', category: 'iso8583', description: 'Decode Field 22 - POS Entry Mode', shortcut: '5' },
-  { id: 'tlv', label: 'TLV Parser', icon: '📋', category: 'emv', description: 'Parse EMV TLV data', shortcut: '6' },
-  { id: 'emvtags', label: 'EMV & NFC Tags', icon: '🏷️', category: 'emv', description: 'Complete EMV & NFC tag reference', shortcut: '7' },
-  { id: 'emvrid', label: 'RID Reference', icon: '📇', category: 'emv', description: 'Registered Application Provider IDs', shortcut: 'r' },
-  { id: 'emvcryptogram', label: 'Cryptogram Calc', icon: '🔐', category: 'emv', description: 'Calculate ARQC/ARPC for EMV', shortcut: 'a' },
-  { id: 'tvr', label: 'TVR', icon: '🧾', category: 'emv', description: 'Tag 95 decoder', shortcut: 'v' },
-  { id: 'cvmresults', label: 'CVM Results', icon: '✅', category: 'emv', description: 'Tag 9F34 decoder', shortcut: 'y' },
-  { id: 'aip', label: 'AIP', icon: '🧩', category: 'emv', description: 'Tag 82 decoder', shortcut: 'u' },
-  { id: 'iad', label: 'IAD', icon: '🧬', category: 'emv', description: 'Tag 9F10 decoder', shortcut: 'd' },
-  { id: 'cvr', label: 'CVR', icon: '✓', category: 'emv', description: 'Card Verification Results decoder', shortcut: 'x' },
-  { id: 'terminalcaps', label: 'Term Caps', icon: '🖲️', category: 'emv', description: 'Tag 9F33 decoder', shortcut: 'q' },
-  { id: 'pinblock', label: 'PIN Block', icon: '🔐', category: 'pin', description: 'Calculate PIN blocks', shortcut: '8' },
-  { id: 'pinfromblock', label: 'PIN from Block', icon: '🔓', category: 'pin', description: 'Extract PIN from PIN block', shortcut: '9' },
-  { id: 'visapvv', label: 'Visa PVV', icon: '💳', category: 'pin', description: 'Visa PIN Verification Value', shortcut: '0' },
-  { id: 'cvvcalc', label: 'CVV Calculator', icon: '🔢', category: 'pin', description: 'Calculate CVV/CVC values', shortcut: 'c' },
-  { id: 'servicecode', label: 'Service Codes', icon: '🔑', category: 'reference', description: 'Card service codes reference', shortcut: 'w' },
-  { id: 'mcclist', label: 'MCC List', icon: '🏪', category: 'reference', description: 'Merchant Category Codes', shortcut: 'e' },
-  { id: 'aidlist', label: 'AID List', icon: '📋', category: 'reference', description: 'EMV Application Identifiers', shortcut: 'i' },
-  { id: 'paymentkeys', label: 'Payment Keys', icon: '🔑', category: 'reference', description: 'TMK, TPK, TAK, ZMK, ZPK, ZAK, LMK reference', shortcut: 'k' },
-  { id: 'knowledgebase', label: 'Knowledge Base', icon: '📚', category: 'reference', description: 'Payment system articles & guides', shortcut: 'l' },
-  { id: 'cardgen', label: 'Card Generator', icon: '🎴', category: 'utilities', description: 'Generate test card numbers', shortcut: 'g' },
-  { id: 'converter', label: 'Converters', icon: '🔄', category: 'utilities', description: 'Hex, ASCII, Base64 converters', shortcut: 't' },
-];
-
 const ToolFallback = () => (
   <div className="w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-6">
     <div className="h-4 w-32 bg-slate-200 dark:bg-zinc-800 rounded animate-pulse mb-4" />
@@ -101,6 +54,7 @@ const Dashboard = () => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
@@ -124,7 +78,7 @@ const Dashboard = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Load sidebar state
+  // Load sidebar state (desktop only)
   useEffect(() => {
     const saved = localStorage.getItem('sidebarOpen');
     if (saved !== null) {
@@ -132,10 +86,15 @@ const Dashboard = () => {
     }
   }, []);
 
-  // Save sidebar state
+  // Save sidebar state (desktop only)
   useEffect(() => {
     localStorage.setItem('sidebarOpen', sidebarOpen.toString());
   }, [sidebarOpen]);
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [location.pathname]);
 
   // Toggle category collapse
   const toggleCategory = (categoryId: string) => {
@@ -230,21 +189,42 @@ const Dashboard = () => {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-black dark:to-zinc-950 overflow-hidden">
-      {/* Sidebar */}
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <AppSidebar
+          isOpen={sidebarOpen}
+          searchQuery={searchQuery}
+          collapsedCategories={collapsedCategories}
+          activeMenu={activeMenu}
+          groupedMenuItems={groupedMenuItems}
+          toolCategories={TOOL_CATEGORIES}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+          onSearchChange={setSearchQuery}
+          onToggleCategory={toggleCategory}
+          onMenuChange={handleMenuChange}
+          onToggleDarkMode={toggleTheme}
+          onShowShortcuts={() => setShowKeyboardShortcuts(true)}
+          darkMode={theme === 'dark'}
+          isMobile={false}
+        />
+      </div>
+
+      {/* Mobile Sidebar */}
       <AppSidebar
-        isOpen={sidebarOpen}
+        isOpen={mobileSidebarOpen}
         searchQuery={searchQuery}
         collapsedCategories={collapsedCategories}
         activeMenu={activeMenu}
         groupedMenuItems={groupedMenuItems}
         toolCategories={TOOL_CATEGORIES}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        onToggle={() => setMobileSidebarOpen(!mobileSidebarOpen)}
         onSearchChange={setSearchQuery}
         onToggleCategory={toggleCategory}
         onMenuChange={handleMenuChange}
         onToggleDarkMode={toggleTheme}
         onShowShortcuts={() => setShowKeyboardShortcuts(true)}
         darkMode={theme === 'dark'}
+        isMobile={true}
       />
 
       {/* Main Content */}
@@ -255,6 +235,8 @@ const Dashboard = () => {
           getCategoryColor={getCategoryColor}
           toolCategories={TOOL_CATEGORIES}
           onShortcutsClick={() => setShowKeyboardShortcuts(true)}
+          onMobileMenuClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+          showMobileMenu={mobileSidebarOpen}
         />
 
         {/* Content Area */}

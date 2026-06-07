@@ -299,29 +299,29 @@ const EmvTlvParser = ({ className = '' }) => {
   }, []);
 
   return (
-    <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-6 ${className}`}>
+    <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-3 sm:p-4 md:p-6 ${className}`}>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">EMV TLV Parser</h1>
-        <p className="text-slate-600 dark:text-slate-400 text-sm">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-slate-800 dark:text-white mb-1.5">EMV TLV Parser</h1>
+        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
           Parse EMV Tag-Length-Value (TLV) data from hex format
         </p>
       </div>
 
       {/* Input Section */}
-      <div className="mb-6">
-        <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
+      <div className="mb-4 sm:mb-6">
+        <label className="block text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-medium mb-2">
           TLV Data (Hex)
         </label>
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Enter hex TLV data (e.g., 9F02065F3401...)"
-          className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
+          className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-xs sm:text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
           rows={4}
         />
         {error && (
-          <div className="mt-2 text-red-600 dark:text-red-400 text-sm flex items-center gap-2">
+          <div className="mt-2 text-red-600 dark:text-red-400 text-xs sm:text-sm flex items-center gap-2">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
@@ -331,51 +331,52 @@ const EmvTlvParser = ({ className = '' }) => {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
         <button
           onClick={handleParse}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          className="col-span-1 px-3 sm:px-4 py-2.5 bg-blue-600 text-white text-xs sm:text-xs md:text-sm rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors active:scale-[0.98]"
         >
           Parse TLV
         </button>
         <button
           onClick={handleExample}
-          className="px-4 py-2 bg-white dark:bg-zinc-900 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-zinc-700 rounded-md hover:bg-slate-50 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          className="col-span-1 px-3 sm:px-4 py-2.5 bg-white dark:bg-zinc-900 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-zinc-700 rounded-md hover:bg-slate-50 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-xs sm:text-xs md:text-sm active:scale-[0.98]"
         >
           Load Example
         </button>
         <button
           onClick={handleClear}
-          className="px-4 py-2 bg-white dark:bg-zinc-900 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-zinc-700 rounded-md hover:bg-slate-50 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          className="col-span-1 px-3 sm:px-4 py-2.5 bg-white dark:bg-zinc-900 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-zinc-700 rounded-md hover:bg-slate-50 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-xs sm:text-xs md:text-sm active:scale-[0.98]"
         >
           Clear
         </button>
         <button
           onClick={handleDownloadExcel}
           disabled={tlvData.length === 0}
-          className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors"
+          className="col-span-1 px-3 sm:px-4 py-2.5 bg-emerald-600 text-white text-xs sm:text-xs md:text-sm rounded-md hover:bg-emerald-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors active:scale-[0.98]"
           title={tlvData.length === 0 ? 'Parse TLV data before downloading' : 'Download parsed TLV output as Excel'}
         >
-          Download Excel
+          <span className="hidden sm:inline">Download Excel</span>
+          <span className="sm:hidden">Excel</span>
         </button>
       </div>
 
       {/* Statistics */}
       {tlvData.length > 0 && (
-        <div className="mb-6 p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
-          <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Statistics</h3>
-          <div className="flex gap-6 text-sm">
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800">
+          <h3 className="text-xs sm:text-xs md:text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 sm:mb-2">Statistics</h3>
+          <div className="grid grid-cols-3 gap-2 sm:gap-6 text-xs sm:text-xs md:text-sm">
             <div>
-              <span className="text-slate-500 dark:text-slate-400">Total Tags:</span>
-              <span className="ml-1 font-medium text-slate-900 dark:text-slate-100">{stats.totalTags}</span>
+              <div className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs">Total Tags</div>
+              <div className="font-medium text-slate-900 dark:text-slate-100 text-sm sm:text-sm">{stats.totalTags}</div>
             </div>
             <div>
-              <span className="text-slate-500 dark:text-slate-400">Total Bytes:</span>
-              <span className="ml-1 font-medium text-slate-900 dark:text-slate-100">{stats.totalBytes}</span>
+              <div className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs">Total Bytes</div>
+              <div className="font-medium text-slate-900 dark:text-slate-100 text-sm sm:text-sm">{stats.totalBytes}</div>
             </div>
             <div>
-              <span className="text-slate-500 dark:text-slate-400">Unique Tags:</span>
-              <span className="ml-1 font-medium text-slate-900 dark:text-slate-100">{stats.uniqueTags}</span>
+              <div className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs">Unique Tags</div>
+              <div className="font-medium text-slate-900 dark:text-slate-100 text-sm sm:text-sm">{stats.uniqueTags}</div>
             </div>
           </div>
         </div>
@@ -384,46 +385,54 @@ const EmvTlvParser = ({ className = '' }) => {
       {/* Results Table */}
       {tlvData.length > 0 && (
         <div className="border border-slate-200 dark:border-zinc-800 rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-slate-50 dark:bg-zinc-900">
-              <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tag</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Name</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Length</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Value (Hex)</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Value (ASCII)</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-black divide-y divide-slate-200 dark:divide-zinc-800">
-              {tlvData.map((item, index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-white dark:bg-black' : 'bg-slate-50 dark:bg-zinc-900'}>
-                  <td className="px-4 py-2 whitespace-nowrap">
-                    <code className="text-sm font-mono bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
-                      {item.tag}
-                    </code>
-                  </td>
-                  <td className="px-4 py-2 text-sm text-slate-900 dark:text-slate-100">{item.tagName}</td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{item.length}</td>
-                  <td className="px-4 py-2 text-sm font-mono text-slate-600 dark:text-slate-400">{item.valueHex}</td>
-                  <td className="px-4 py-2 text-sm font-mono text-slate-600 dark:text-slate-400">
-                    {item.valueAscii || <span className="text-slate-400 dark:text-zinc-500 italic">N/A</span>}
-                  </td>
+          <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+            <table className="w-full min-w-[300px] sm:min-w-[500px] md:min-w-[600px]">
+              <thead className="bg-slate-50 dark:bg-zinc-900">
+                <tr>
+                  <th className="px-2 sm:px-3 md:px-4 py-2 text-left text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tag</th>
+                  <th className="px-2 sm:px-3 md:px-4 py-2 text-left text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Name</th>
+                  <th className="px-2 sm:px-3 md:px-4 py-2 text-left text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Length</th>
+                  <th className="hidden md:table-cell px-2 sm:px-3 md:px-4 py-2 text-left text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Value (Hex)</th>
+                  <th className="hidden lg:table-cell px-2 sm:px-3 md:px-4 py-2 text-left text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Value (ASCII)</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white dark:bg-black divide-y divide-slate-200 dark:divide-zinc-800">
+                {tlvData.map((item, index) => (
+                  <tr key={index} className={index % 2 === 0 ? 'bg-white dark:bg-black' : 'bg-slate-50 dark:bg-zinc-900'}>
+                    <td className="px-2 sm:px-3 md:px-4 py-2 whitespace-nowrap">
+                      <code className="text-[10px] sm:text-xs md:text-sm font-mono bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
+                        {item.tag}
+                      </code>
+                    </td>
+                    <td className="px-2 sm:px-3 md:px-4 py-2 text-[10px] sm:text-xs md:text-sm text-slate-900 dark:text-slate-100 truncate max-w-[120px] sm:max-w-[180px] md:max-w-none" title={item.tagName}>
+                      {item.tagName}
+                    </td>
+                    <td className="px-2 sm:px-3 md:px-4 py-2 whitespace-nowrap text-[10px] sm:text-xs md:text-sm text-slate-600 dark:text-slate-400">{item.length}</td>
+                    <td className="hidden md:table-cell px-2 sm:px-3 md:px-4 py-2 text-[10px] sm:text-xs md:text-sm font-mono text-slate-600 dark:text-slate-400 truncate max-w-[120px] sm:max-w-none" title={item.valueHex}>
+                      {item.valueHex}
+                    </td>
+                    <td className="hidden lg:table-cell px-2 sm:px-3 md:px-4 py-2 text-[10px] sm:text-xs md:text-sm font-mono text-slate-600 dark:text-slate-400 truncate max-w-[100px] sm:max-w-[120px]">
+                      {item.valueAscii || <span className="text-slate-400 dark:text-zinc-500 italic">N/A</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {/* JSON Output */}
       {tlvData.length > 0 && (
-        <details className="mt-6">
-          <summary className="cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100">
+        <details className="mt-4 sm:mt-6 group">
+          <summary className="cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 select-none">
             View as JSON
           </summary>
-          <pre className="mt-2 p-4 bg-zinc-900 text-slate-100 rounded-lg overflow-x-auto text-sm">
-            {JSON.stringify(tlvData, null, 2)}
-          </pre>
+          <div className="mt-3 -mx-3 sm:mx-0 px-3 sm:px-0">
+            <pre className="p-3 sm:p-4 bg-zinc-900 text-slate-100 rounded-lg overflow-x-auto text-xs sm:text-sm max-h-64">
+              {JSON.stringify(tlvData, null, 2)}
+            </pre>
+          </div>
         </details>
       )}
     </div>

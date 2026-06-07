@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
 
 interface MenuItem {
   id: string;
@@ -30,6 +31,7 @@ interface AppSidebarProps {
   onToggleDarkMode: () => void;
   onShowShortcuts: () => void;
   darkMode: boolean;
+  isMobile?: boolean;
 }
 
 export const AppSidebar = ({
@@ -46,7 +48,9 @@ export const AppSidebar = ({
   onToggleDarkMode,
   onShowShortcuts,
   darkMode,
+  isMobile = false,
 }: AppSidebarProps) => {
+  const sidebarRef = useRef<HTMLElement>(null);
   const totalVisibleTools = Object.values(groupedMenuItems).reduce((sum, items) => sum + items.length, 0);
   const activeCategoryId = Object.values(groupedMenuItems)
     .flat()
@@ -68,22 +72,83 @@ export const AppSidebar = ({
     slate: 'text-slate-700 dark:text-slate-300',
   };
 
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    if (!isMobile || !isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        onToggle();
+      }
+    };
+
+    // Prevent body scroll when mobile sidebar is open
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = '';
+    };
+  }, [isMobile, isOpen, onToggle]);
+
+  // Handle link clicks to close mobile sidebar
+  const handleMenuClick = (id: string) => {
+    onMenuChange(id);
+    if (isMobile) {
+      onToggle();
+    }
+  };
+
   return (
-    <aside
-      className={`${isOpen ? 'w-80' : 'w-16'} bg-white dark:bg-zinc-950 border-r border-slate-200 dark:border-zinc-800 transition-all duration-300 ease-in-out flex flex-col shadow-sm overflow-x-clip`}
-    >
+    <>
+      {/* Mobile Backdrop */}
+      {isMobile && isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden transition-opacity duration-300"
+          onClick={onToggle}
+        />
+      )}
+
+      <aside
+        ref={sidebarRef}
+        className={`${isMobile
+          ? `fixed inset-y-0 left-0 z-40 w-80 max-w-[85vw] transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`
+          : `${isOpen ? 'w-80' : 'w-16'} relative`
+          } bg-white dark:bg-zinc-950 border-r border-slate-200 dark:border-zinc-800 transition-all duration-300 ease-in-out flex flex-col shadow-sm overflow-x-clip`}
+      >
       {/* Sidebar Header */}
       <div className="p-3 border-b border-slate-200 dark:border-zinc-800 relative">
-        <button
-          onClick={onToggle}
-          className={`absolute ${isOpen ? 'right-3 top-3' : '-right-3 top-1/2 -translate-y-1/2'} w-8 h-8 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-full flex items-center justify-center hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all duration-300 shadow-sm z-20`}
-          aria-label="Toggle sidebar"
-          title="Toggle sidebar ([)"
-        >
-          <svg className={`w-4 h-4 text-slate-600 dark:text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-0' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
+        {/* Desktop Toggle Button - Hidden on mobile */}
+        {!isMobile && (
+          <button
+            onClick={onToggle}
+            className={`absolute ${isOpen ? 'right-3 top-3' : '-right-3 top-1/2 -translate-y-1/2'} w-8 h-8 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-full flex items-center justify-center hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all duration-300 shadow-sm z-20`}
+            aria-label="Toggle sidebar"
+            title="Toggle sidebar ([)"
+          >
+            <svg className={`w-4 h-4 text-slate-600 dark:text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-0' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        )}
+
+        {/* Mobile Close Button */}
+        {isMobile && (
+          <button
+            onClick={onToggle}
+            className="absolute right-3 top-3 w-8 h-8 bg-slate-100 dark:bg-zinc-800 rounded-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-zinc-700 transition-all duration-300"
+            aria-label="Close sidebar"
+          >
+            <svg className="w-4 h-4 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
 
         <Link
           to="/"
@@ -148,7 +213,7 @@ export const AppSidebar = ({
           const items = groupedMenuItems[catId];
           if (!items || items.length === 0) return null;
 
-          const isCollapsed = collapsedCategories.has(catId);
+          const isCollapsed = !isMobile && collapsedCategories.has(catId);
           const isActiveCategory = activeCategoryId === catId;
           const accent = categoryAccent[category.color] || categoryAccent.slate;
           const textColor = categoryText[category.color] || categoryText.slate;
@@ -156,14 +221,14 @@ export const AppSidebar = ({
           return (
             <div key={catId} className="mb-2">
               <button
-                onClick={() => onToggleCategory(catId)}
-                className={`w-full flex items-center gap-2 px-2 py-2 rounded-md transition-colors ${isOpen ? 'hover:bg-slate-50 dark:hover:bg-zinc-900' : 'justify-center'
+                onClick={() => !isMobile && onToggleCategory(catId)}
+                className={`w-full flex items-center gap-2 px-2 py-2 rounded-md transition-colors ${(isOpen || isMobile) ? 'hover:bg-slate-50 dark:hover:bg-zinc-900' : 'justify-center'
                   }`}
                 title={category.label}
               >
-                <span className={`w-1.5 h-5 rounded-full ${isActiveCategory ? accent : 'bg-slate-200 dark:bg-zinc-800'} ${!isOpen ? 'hidden' : ''}`} />
+                <span className={`w-1.5 h-5 rounded-full ${isActiveCategory ? accent : 'bg-slate-200 dark:bg-zinc-800'} ${!(isOpen || isMobile) ? 'hidden' : ''}`} />
                 <span className="text-base">{category.icon}</span>
-                {isOpen && (
+                {(isOpen || isMobile) && (
                   <>
                     <span className={`text-[11px] font-bold uppercase tracking-wide flex-1 text-left ${isActiveCategory ? textColor : 'text-slate-500 dark:text-zinc-500'}`}>
                       {category.label}
@@ -171,9 +236,11 @@ export const AppSidebar = ({
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400">
                       {items.length}
                     </span>
-                    <svg className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isCollapsed ? '-rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                    {!isMobile && (
+                      <svg className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isCollapsed ? '-rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    )}
                   </>
                 )}
               </button>
@@ -181,7 +248,7 @@ export const AppSidebar = ({
               {!isCollapsed && items.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => onMenuChange(item.id)}
+                  onClick={() => handleMenuClick(item.id)}
                   className={`relative w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors group ${activeMenu === item.id
                     ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-200'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-900 dark:hover:text-slate-100'
@@ -195,16 +262,18 @@ export const AppSidebar = ({
                     }`}>
                     {item.icon}
                   </span>
-                  {isOpen && (
+                  {(isOpen || isMobile) && (
                     <div className="flex-1 text-left min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-sm truncate">{item.label}</span>
-                        <kbd className={`ml-2 inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono rounded ${activeMenu === item.id
-                          ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
-                          : 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400'
-                          }`}>
-                          {item.shortcut}
-                        </kbd>
+                        {!isMobile && (
+                          <kbd className={`ml-2 inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono rounded ${activeMenu === item.id
+                            ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
+                            : 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400'
+                            }`}>
+                            {item.shortcut}
+                          </kbd>
+                        )}
                       </div>
                       <p className="text-[11px] truncate text-slate-400 dark:text-zinc-500">
                         {item.description}
@@ -220,16 +289,18 @@ export const AppSidebar = ({
 
       {/* Sidebar Footer */}
       <div className="p-3 border-t border-slate-200 dark:border-zinc-800 space-y-2">
-        {/* Keyboard Shortcuts Button */}
-        <button
-          onClick={onShowShortcuts}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-900 ${!isOpen && 'justify-center'
-            }`}
-          title="Keyboard shortcuts (?)"
-        >
-          <span className="text-base">⌨️</span>
-          {isOpen && <span className="text-sm font-medium">Shortcuts</span>}
-        </button>
+        {/* Keyboard Shortcuts Button - Hidden on mobile */}
+        {!isMobile && (
+          <button
+            onClick={onShowShortcuts}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-900 ${!isOpen && 'justify-center'
+              }`}
+            title="Keyboard shortcuts (?)"
+          >
+            <span className="text-base">⌨️</span>
+            {isOpen && <span className="text-sm font-medium">Shortcuts</span>}
+          </button>
+        )}
 
         {/* Dark Mode Toggle */}
         <button
@@ -237,15 +308,15 @@ export const AppSidebar = ({
           className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${darkMode
             ? 'bg-zinc-800 text-white'
             : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-900'
-            } ${!isOpen && 'justify-center'}`}
+            } ${!isOpen && !isMobile ? 'justify-center' : ''}`}
           title="Toggle dark mode"
         >
           <span className="text-base">{darkMode ? '🌙' : '☀️'}</span>
-          {isOpen && <span className="text-sm font-medium">{darkMode ? 'Dark Mode' : 'Light Mode'}</span>}
+          {(isOpen || isMobile) && <span className="text-sm font-medium">{darkMode ? 'Dark Mode' : 'Light Mode'}</span>}
         </button>
 
         {/* Version Info */}
-        {isOpen && (
+        {(isOpen || isMobile) && (
           <div className="flex items-center justify-between pt-2">
             <p className="text-[10px] text-slate-400 dark:text-zinc-600">v1.0.0</p>
             <a
@@ -260,5 +331,6 @@ export const AppSidebar = ({
         )}
       </div>
     </aside>
+    </>
   );
 };
