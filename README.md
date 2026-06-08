@@ -4,8 +4,8 @@
 
   ![ISO 8583](https://img.shields.io/badge/ISO%208583-1:2003-blue)
   ![EMV](https://img.shields.io/badge/EMV-EMV%204.3-green)
-  ![React](https://img.shields.io/badge/React-18-61DAFB)
-  ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6)
+  ![React](https://img.shields.io/badge/React-19-61DAFB)
+  ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6)
   ![License](https://img.shields.io/badge/License-MIT-green)
 
   **A comprehensive suite of payment card utilities for ISO 8583 and EMV development**
@@ -16,41 +16,53 @@
 
 ## Overview
 
-Payment Tools is an open-source web application designed for payment card industry professionals, developers, and testers. It provides a comprehensive set of utilities for working with ISO 8583 messages, EMV data, PIN blocks, and card generation.
+Payment Tools is an open-source web application designed for payment card industry professionals, developers, and testers. It provides a comprehensive set of utilities for working with ISO 8583 messages, EMV data, PIN blocks, cryptograms, and card generation.
 
 ## Features
 
-- **ISO 8583 Tools**
-  - Bitmap Editor with visual field selection
-  - Message Parser for ISO 8583 messages
-  - MTI (Message Type Indicator) selector
-  - Support for primary and secondary bitmaps
+### ISO 8583 Tools
+- Bitmap Editor with visual field selection
+- Message Parser for ISO 8583 messages
+- MTI (Message Type Indicator) reference
+- MAC Calculator for ISO 8583 messages
+- Thales HSM Commands reference
+- POS Entry Mode decoder (Field 22)
 
-- **EMV Tools**
-  - TLV (Tag-Length-Value) Parser
-  - EMV Tag reference guide
-  - POS Entry Mode decoder
+### EMV Tools
+- TLV (Tag-Length-Value) Parser
+- Complete EMV & NFC tag reference
+- RID (Registered Application Provider) reference
+- Cryptogram Calculator (ARQC/ARPC)
+- TVR Decoder (Tag 95)
+- CVM Results Decoder (Tag 9F34)
+- AIP Decoder (Tag 82)
+- IAD Decoder (Tag 9F10)
+- CVR Decoder
+- Terminal Capabilities Decoder (Tag 9F33)
 
-- **PIN Tools**
-  - PIN Block Calculator (Format 0)
-  - PIN from PIN Block extractor
-  - Visa PVV (PIN Verification Value) calculator
+### PIN Tools
+- PIN Block Calculator (Format 0)
+- PIN from PIN Block extractor
+- Visa PVV (PIN Verification Value) calculator
+- CVV/CVC Calculator
 
-- **Reference Data**
-  - Service Codes reference
-  - MCC (Merchant Category Codes) list
-  - Card brand test numbers
+### Reference Data
+- Service Codes reference
+- MCC (Merchant Category Codes) list
+- AID (Application Identifier) list
+- Payment Keys reference (TMK, TPK, TAK, ZMK, ZPK, ZAK, LMK)
+- Knowledge Base with articles & guides
 
-- **Utilities**
-  - Card Generator (Visa, Mastercard, Amex, Discover, JCB, UnionPay, TakaPay)
-  - Hex, ASCII, Base64 converters
+### Utilities
+- Card Generator (Visa, Mastercard, Amex, Discover, JCB, UnionPay, TakaPay)
+- Hex, ASCII, Base64 converters
 
 ## Installation
 
 ### Prerequisites
 
 - Node.js 18+ 
-- npm or yarn
+- npm or yarn or pnpm
 
 ### Clone and Install
 
@@ -86,50 +98,68 @@ npm run preview
 
 ## Available Tools
 
-### ISO 8583 Tools
+### ISO 8583 Tools (6 tools)
 
-| Tool | Description |
-|------|-------------|
-| **Bitmap Editor** | Create and edit ISO 8583 bitmaps with field descriptions |
-| **Message Parser** | Parse and display ISO 8583 message fields |
-| **POS Entry Mode** | Decode Field 22 - POS Entry Mode codes |
+| Tool | Shortcut | Description |
+|------|----------|-------------|
+| **Bitmap Editor** | `1` | Create and edit ISO 8583 bitmaps with field descriptions |
+| **Message Parser** | `2` | Parse and display ISO 8583 message fields |
+| **MTI Reference** | `3` | Message Type Identifier codes reference |
+| **MAC Calculator** | `M` | Calculate ISO 8583 MAC hashes |
+| **Thales HSM** | `4` | Thales HSM Commands Reference |
+| **POS Entry Mode** | `5` | Decode Field 22 - POS Entry Mode codes |
 
-### EMV Tools
+### EMV Tools (10 tools)
 
-| Tool | Description |
-|------|-------------|
-| **TLV Parser** | Parse EMV TLV data with tag descriptions |
-| **EMV Tags** | Complete EMV tag reference guide |
+| Tool | Shortcut | Description |
+|------|----------|-------------|
+| **TLV Parser** | `6` | Parse EMV TLV data with tag descriptions |
+| **EMV & NFC Tags** | `7` | Complete EMV & NFC tag reference guide |
+| **RID Reference** | `R` | Registered Application Provider IDs |
+| **Cryptogram Calc** | `A` | Calculate ARQC/ARPC for EMV transactions |
+| **TVR** | `V` | Terminal Verification Results (Tag 95) decoder |
+| **CVM Results** | `Y` | Cardholder Verification Method (Tag 9F34) decoder |
+| **AIP** | `U` | Application Interchange Profile (Tag 82) decoder |
+| **IAD** | `D` | Issuer Application Data (Tag 9F10) decoder |
+| **CVR** | `X` | Card Verification Results decoder |
+| **Terminal Capabilities** | `Q` | Terminal Capabilities (Tag 9F33) decoder |
 
-### PIN Tools
+### PIN Tools (4 tools)
 
-| Tool | Description |
-|------|-------------|
-| **PIN Block** | Calculate PIN blocks with 3DES encryption |
-| **PIN from Block** | Extract PIN from encrypted PIN block |
-| **Visa PVV** | Calculate Visa PIN Verification Value |
+| Tool | Shortcut | Description |
+|------|----------|-------------|
+| **PIN Block** | `8` | Calculate PIN blocks with 3DES encryption |
+| **PIN from Block** | `9` | Extract PIN from encrypted PIN block |
+| **Visa PVV** | `0` | Calculate Visa PIN Verification Value |
+| **CVV Calculator** | `C` | Calculate CVV/CVC values |
 
-### Reference
+### Reference (5 tools)
 
-| Tool | Description |
-|------|-------------|
-| **Service Codes** | Card service codes reference |
-| **MCC List** | Merchant Category Codes lookup |
+| Tool | Shortcut | Description |
+|------|----------|-------------|
+| **Service Codes** | `W` | Card service codes reference |
+| **MCC List** | `E` | Merchant Category Codes lookup |
+| **AID List** | `I` | EMV Application Identifiers |
+| **Payment Keys** | `K` | TMK, TPK, TAK, ZMK, ZPK, ZAK, LMK reference |
+| **Knowledge Base** | `L` | Payment system articles & guides |
 
-### Utilities
+### Utilities (2 tools)
 
-| Tool | Description |
-|------|-------------|
-| **Card Generator** | Generate test card numbers with Track data |
-| **Converters** | Hex, ASCII, Base64 encoding/decoding |
+| Tool | Shortcut | Description |
+|------|----------|-------------|
+| **Card Generator** | `G` | Generate test card numbers with Track data |
+| **Converters** | `T` | Hex, ASCII, Base64 encoding/decoding |
 
 ## Tech Stack
 
-- **React 18** - UI framework
-- **TypeScript** - Type safety
-- **Vite** - Build tool
-- **Tailwind CSS** - Styling
+- **React 19** - UI framework
+- **TypeScript 6** - Type safety
+- **Vite 8** - Build tool
+- **Tailwind CSS 4** - Styling
 - **CryptoJS** - Encryption operations
+- **React Router** - Client-side routing
+- **React Hook Form** - Form management
+- **Zod** - Schema validation
 
 ## Keyboard Shortcuts
 
@@ -137,18 +167,33 @@ npm run preview
 |----------|--------|
 | `1` | Bitmap Editor |
 | `2` | Message Parser |
-| `3` | POS Entry Mode |
-| `4` | TLV Parser |
-| `5` | EMV Tags |
-| `6` | PIN Block |
-| `7` | PIN from Block |
-| `8` | Visa PVV |
-| `9` | Service Codes |
-| `0` | MCC List |
-| `Q` | Card Generator |
-| `W` | Converters |
+| `3` | MTI Reference |
+| `4` | Thales HSM |
+| `5` | POS Entry Mode |
+| `6` | TLV Parser |
+| `7` | EMV & NFC Tags |
+| `8` | PIN Block |
+| `9` | PIN from Block |
+| `0` | Visa PVV |
+| `A` | Cryptogram Calculator |
+| `C` | CVV Calculator |
+| `D` | IAD Decoder |
+| `E` | MCC List |
+| `G` | Card Generator |
+| `I` | AID List |
+| `K` | Payment Keys |
+| `L` | Knowledge Base |
+| `M` | MAC Calculator |
+| `Q` | Terminal Capabilities |
+| `R` | RID Reference |
+| `T` | Converters |
+| `U` | AIP Decoder |
+| `V` | TVR Decoder |
+| `W` | Service Codes |
+| `X` | CVR Decoder |
+| `Y` | CVM Results |
 | `[` | Toggle sidebar |
-| `?` | Show shortcuts |
+| `?` | Show keyboard shortcuts |
 | `Esc` | Close modal |
 
 ## Security Notice
@@ -159,6 +204,7 @@ npm run preview
 - Always follow PCI-DSS guidelines when handling payment card data
 - All calculations are performed client-side
 - Do not use real cardholder data for testing
+- This tool does not store any sensitive information
 
 ## Contributing
 
@@ -194,6 +240,4 @@ If you find this tool useful, please consider giving it a ⭐ on GitHub!
 
 ---
 
-<div align="center">
-  <sub>Built with ❤️ for the payment card industry community</sub>
-</div>
+

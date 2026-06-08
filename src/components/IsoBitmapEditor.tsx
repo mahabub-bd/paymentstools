@@ -330,69 +330,60 @@ const IsoBitmapEditor = ({ className = '' }) => {
       </div>
 
       {/* MTI Selector */}
-      <div className="mb-4 sm:mb-6 p-2.5 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-        <h3 className="text-xs sm:text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2 sm:mb-3">Message Type Indicator (MTI)</h3>
-        <div className="grid grid-cols-2 gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-          {/* Version */}
-          <div>
-            <label className="block text-[9px] sm:text-[10px] text-slate-600 dark:text-slate-400 mb-0.5 sm:mb-1">Version</label>
-            <select
-              value={mti[0]}
-              onChange={(e) => setMti(e.target.value + mti.slice(1))}
-              className="w-full px-1.5 sm:px-2 py-1 sm:py-1.5 text-[11px] sm:text-sm border border-slate-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100"
-            >
-              {MTI_VERSIONS.map(v => (
-                <option key={v} value={v}>{v} - {v === '0' ? '1987' : v === '1' ? '1993' : v === '2' ? '2003' : '2003+'}</option>
-              ))}
-            </select>
+      <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          {/* MTI Input */}
+          <div className="flex items-center gap-2">
+            <label className="text-xs sm:text-sm font-semibold text-blue-700 dark:text-blue-300">MTI</label>
+            <input
+              type="text"
+              value={mti}
+              onChange={(e) => setMti(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
+              className="px-2 sm:px-3 py-1.5 text-sm sm:text-base border border-slate-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 font-mono text-center w-16 sm:w-20"
+              maxLength={4}
+            />
           </div>
-          {/* Class */}
-          <div>
-            <label className="block text-[9px] sm:text-[10px] text-slate-600 dark:text-slate-400 mb-0.5 sm:mb-1">Class</label>
-            <select
-              value={mti[1]}
-              onChange={(e) => setMti(mti[0] + e.target.value + mti.slice(2))}
-              className="w-full px-1.5 sm:px-2 py-1 sm:py-1.5 text-[11px] sm:text-sm border border-slate-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100"
-            >
-              {MTI_CLASSES.map(c => (
-                <option key={c} value={c}>{c} - {c === '1' ? 'Auth' : 'Fin'}</option>
-              ))}
-            </select>
-          </div>
-          {/* Function */}
-          <div className="col-span-2">
-            <label className="block text-[9px] sm:text-[10px] text-slate-600 dark:text-slate-400 mb-0.5 sm:mb-1">Function</label>
-            <select
-              value={mti.slice(2, 4)}
-              onChange={(e) => setMti(mti.slice(0, 2) + e.target.value)}
-              className="w-full px-1.5 sm:px-2 py-1 sm:py-1.5 text-[11px] sm:text-sm border border-slate-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100"
-            >
-              <option value="00">00 - Request</option>
-              <option value="01">01 - Request (Repeat)</option>
-              <option value="02">02 - Request (Partial)</option>
-              <option value="10">10 - Response</option>
-              <option value="11">11 - Response (Repeat)</option>
-              <option value="12">12 - Response (Partial)</option>
-              <option value="20">20 - Advice Request</option>
-              <option value="21">21 - Advice (Repeat)</option>
-              <option value="22">22 - Advice (Partial)</option>
-              <option value="30">30 - Advice Response</option>
-              <option value="31">31 - Advice Resp (R)</option>
-              <option value="32">32 - Advice Resp (P)</option>
-            </select>
-          </div>
-        </div>
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400">
+          {/* Dropdowns */}
+          <select
+            value={mti[0]}
+            onChange={(e) => setMti(e.target.value + mti.slice(1))}
+            className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm border border-slate-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100"
+          >
+            {MTI_VERSIONS.map(v => (
+              <option key={v} value={v}>{v === '0' ? 'ISO 8583:1987' : v === '1' ? 'ISO 8583:1993' : v === '2' ? 'ISO 8583:2003' : 'ISO 8583+'}</option>
+            ))}
+          </select>
+          <select
+            value={mti[1]}
+            onChange={(e) => setMti(mti[0] + e.target.value + mti.slice(2))}
+            className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm border border-slate-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100"
+          >
+            {MTI_CLASSES.map(c => (
+              <option key={c} value={c}>{c === '1' ? 'Authorization' : 'Financial'}</option>
+            ))}
+          </select>
+          <select
+            value={mti.slice(2, 4)}
+            onChange={(e) => setMti(mti.slice(0, 2) + e.target.value)}
+            className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm border border-slate-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 min-w-[100px] sm:min-w-[120px]"
+          >
+            <option value="00">Request</option>
+            <option value="01">Request (Repeat)</option>
+            <option value="02">Request (Partial)</option>
+            <option value="10">Response</option>
+            <option value="11">Response (Repeat)</option>
+            <option value="12">Response (Partial)</option>
+            <option value="20">Advice Request</option>
+            <option value="21">Advice (Repeat)</option>
+            <option value="22">Advice (Partial)</option>
+            <option value="30">Advice Response</option>
+            <option value="31">Advice Resp (Repeat)</option>
+            <option value="32">Advice Resp (Partial)</option>
+          </select>
+          {/* Description */}
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 truncate flex-1 min-w-[150px]">
             {MTI_DESCRIPTIONS[mti] || 'Custom MTI'}
           </p>
-          <input
-            type="text"
-            value={mti}
-            onChange={(e) => setMti(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
-            className="px-2 py-1 text-[11px] sm:text-sm border border-slate-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 font-mono text-center w-16 sm:w-20"
-            maxLength={4}
-          />
         </div>
       </div>
 
