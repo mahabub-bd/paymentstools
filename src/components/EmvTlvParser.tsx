@@ -238,14 +238,19 @@ const EmvTlvParser = ({ className = '' }) => {
       const indent = '  '.repeat(item.indent);
       const valueHex = item.isConstruct ? 'CONSTRUCT' : item.valueHex;
       const valueAscii = item.isConstruct ? 'N/A' : (item.valueAscii || 'N/A');
-      const tagName = item.isConstruct
-        ? `${item.tagName} [${item.children?.length || 0} nested]`
-        : item.tagName;
+
+      let tagName = item.tagName;
+      if (item.isConstruct) {
+        tagName = `${item.tagName} [${item.children?.length || 0} nested]`;
+      }
+      if (item.indent > 0) {
+        tagName = '↳ ' + tagName;
+      }
 
       return `
         <tr>
           <td style="mso-number-format:'\\@';">${escapeExcelCell(prefix + indent + item.tag)}</td>
-          <td>${escapeExcelCell(item.indent > 0 ? '↳ ' : '' + tagName)}</td>
+          <td>${escapeExcelCell(tagName)}</td>
           <td>${escapeExcelCell(item.length)}</td>
           <td style="mso-number-format:'\\@';">${escapeExcelCell(valueHex)}</td>
           <td style="mso-number-format:'\\@';">${escapeExcelCell(valueAscii)}</td>
