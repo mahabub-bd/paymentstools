@@ -142,7 +142,9 @@ export const EMV_TAG_DEFINITIONS: Record<string, EMVTagDefinition> = {
   '9B': { tag: '9B', name: 'Transaction Status Information (TSI)', category: EMVTagCategory.RISK_MANAGEMENT, format: 'HEX' },
 
   // Issuer Script Tags
-  '86': { tag: '86', name: 'Issuer Script Template', category: EMVTagCategory.ISSUER_SCRIPT, format: 'HEX' },
+  '71': { tag: '71', name: 'Issuer Script Template 1', category: EMVTagCategory.ISSUER_SCRIPT, isConstruct: true },
+  '72': { tag: '72', name: 'Issuer Script Template 2', category: EMVTagCategory.ISSUER_SCRIPT, isConstruct: true },
+  '86': { tag: '86', name: 'Issuer Script Command', category: EMVTagCategory.ISSUER_SCRIPT, format: 'HEX' },
   '9F18': { tag: '9F18', name: 'Issuer Script Identifier', category: EMVTagCategory.ISSUER_SCRIPT, format: 'HEX' },
   '9E': { tag: '9E', name: 'Issuer Script Identifier (repeated)', category: EMVTagCategory.ISSUER_SCRIPT, format: 'HEX' },
 

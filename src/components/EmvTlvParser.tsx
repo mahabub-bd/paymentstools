@@ -10,6 +10,10 @@ interface ParsedTlvRow {
   valueAscii: string;
   startIndex: number;
   endIndex: number;
+  isConstruct: boolean;
+  children?: ParsedTlvRow[];
+  indent: number;
+  parentId?: string;
 }
 
 // Common EMV tag definitions
@@ -128,6 +132,64 @@ const EmvTlvParser = ({ className = '' }) => {
   const [error, setError] = useState('');
   const [tlvData, setTlvData] = useState<ParsedTlvRow[]>([]);
 
+  // Helper to check if raw hex bytes are all printable ASCII (0x20-0x7E)
+  const isAllPrintableHex = useCallback((hex: string): boolean => {
+    for (let i = 0; i < hex.length; i += 2) {
+      const byteValue = parseInt(hex.substring(i, i + 2), 16);
+      if (byteValue < 0x20 || byteValue > 0x7E) {
+        return false;
+      }
+    }
+    return true;
+  }, []);
+
+  // Helper to format a single TLV into a row
+  const formatTlvToRow = useCallback((tlv: any, indent = 0, parentId?: string): ParsedTlvRow => {
+    const tagDef = getEMVTagDefinition(tlv.tag);
+    let valueAscii = '';
+
+    // Format value based on tag definition format
+    if (tagDef?.format === 'NUMERIC' || tagDef?.format === 'DATE') {
+      valueAscii = tlv.rawValue;
+    } else if (tagDef?.format === 'ASCII') {
+      const ascii = hexToAscii(tlv.rawValue);
+      valueAscii = /[ -~]/.test(ascii) ? ascii : '';
+    } else if (tagDef?.format === 'HEX' || tagDef?.format === 'BINARY') {
+      if (tlv.rawValue.length <= 4) {
+        valueAscii = '';
+      } else if (isAllPrintableHex(tlv.rawValue) && tlv.rawValue.length >= 4) {
+        valueAscii = hexToAscii(tlv.rawValue);
+      }
+    } else {
+      const ascii = hexToAscii(tlv.rawValue);
+      const printableCount = (ascii.match(/[ -~]/g) || []).length;
+      valueAscii = printableCount >= ascii.length / 2 ? ascii : '';
+    }
+
+    // Process children recursively
+    const children: ParsedTlvRow[] = [];
+    if (tlv.children && tlv.children.length > 0) {
+      tlv.children.forEach((child: any) => {
+        children.push(formatTlvToRow(child, indent + 1, tlv.tag));
+      });
+    }
+
+    return {
+      tag: tlv.tag,
+      tagName: tlv.tagName,
+      length: tlv.length,
+      value: valueAscii || '',
+      valueHex: tlv.rawValue,
+      valueAscii,
+      startIndex: 0,
+      endIndex: 0,
+      isConstruct: tlv.isConstruct || false,
+      children: children.length > 0 ? children : undefined,
+      indent,
+      parentId,
+    };
+  }, [isAllPrintableHex]);
+
   // Parse TLV data from hex string
   const parseTlv = useCallback((hexString: string): ParsedTlvRow[] => {
     const cleanHex = hexString.replace(/\s/g, '').toUpperCase();
@@ -135,60 +197,20 @@ const EmvTlvParser = ({ className = '' }) => {
       throw new Error('Hex string must have even length');
     }
 
-    // Helper to check if raw hex bytes are all printable ASCII (0x20-0x7E)
-    const isAllPrintableHex = (hex: string): boolean => {
-      for (let i = 0; i < hex.length; i += 2) {
-        const byteValue = parseInt(hex.substring(i, i + 2), 16);
-        if (byteValue < 0x20 || byteValue > 0x7E) {
-          return false;
-        }
+    const result = parseEMVTLV(cleanHex);
+    const rows: ParsedTlvRow[] = [];
+
+    result.tags.forEach((tlv) => {
+      const row = formatTlvToRow(tlv, 0);
+      rows.push(row);
+      // Add children directly to the flat list for table display
+      if (row.children) {
+        rows.push(...row.children);
       }
-      return true;
-    };
-
-    return parseEMVTLV(cleanHex).tags.map((tlv) => {
-      const tagDef = getEMVTagDefinition(tlv.tag);
-      let valueAscii = '';
-
-      // Format value based on tag definition format
-      if (tagDef?.format === 'NUMERIC' || tagDef?.format === 'DATE') {
-        // For numeric/DATE tags, show the hex value as-is (BCD encoded digits)
-        valueAscii = tlv.rawValue;
-      } else if (tagDef?.format === 'ASCII') {
-        // For ASCII tags, convert to ASCII with dots for non-printable
-        const ascii = hexToAscii(tlv.rawValue);
-        valueAscii = /[ -~]/.test(ascii) ? ascii : '';
-      } else if (tagDef?.format === 'HEX' || tagDef?.format === 'BINARY') {
-        // For HEX/BINARY tags:
-        // - Show hex value for short values (likely codes/status bytes)
-        // - For longer values, show ASCII only if clearly text data
-        if (tlv.rawValue.length <= 4) {
-          // Short values are likely codes, show N/A (use hex column)
-          valueAscii = '';
-        } else if (isAllPrintableHex(tlv.rawValue) && tlv.rawValue.length >= 4) {
-          // Longer printable values might be actual text
-          valueAscii = hexToAscii(tlv.rawValue);
-        }
-        // else leave empty (shows N/A)
-      } else {
-        // For unknown format, try ASCII but require at least 50% printable
-        const ascii = hexToAscii(tlv.rawValue);
-        const printableCount = (ascii.match(/[ -~]/g) || []).length;
-        valueAscii = printableCount >= ascii.length / 2 ? ascii : '';
-      }
-
-      return {
-        tag: tlv.tag,
-        tagName: tlv.tagName,
-        length: tlv.length,
-        value: valueAscii || '',
-        valueHex: tlv.rawValue,
-        valueAscii,
-        startIndex: 0,
-        endIndex: 0,
-      };
     });
-  }, []);
+
+    return rows;
+  }, [formatTlvToRow]);
 
   const escapeExcelCell = useCallback((value: string | number) => (
     String(value)
@@ -211,15 +233,27 @@ const EmvTlvParser = ({ className = '' }) => {
 
     const cleanInput = input.replace(/\s/g, '').toUpperCase();
     const generatedAt = new Date().toLocaleString();
-    const rows = tlvData.map((item) => `
-      <tr>
-        <td style="mso-number-format:'\\@';">${escapeExcelCell(item.tag)}</td>
-        <td>${escapeExcelCell(item.tagName)}</td>
-        <td>${escapeExcelCell(item.length)}</td>
-        <td style="mso-number-format:'\\@';">${escapeExcelCell(item.valueHex)}</td>
-        <td style="mso-number-format:'\\@';">${escapeExcelCell(item.valueAscii || 'N/A')}</td>
-      </tr>
-    `).join('');
+
+    const formatRow = (item: ParsedTlvRow, prefix = ''): string => {
+      const indent = '  '.repeat(item.indent);
+      const valueHex = item.isConstruct ? 'CONSTRUCT' : item.valueHex;
+      const valueAscii = item.isConstruct ? 'N/A' : (item.valueAscii || 'N/A');
+      const tagName = item.isConstruct
+        ? `${item.tagName} [${item.children?.length || 0} nested]`
+        : item.tagName;
+
+      return `
+        <tr>
+          <td style="mso-number-format:'\\@';">${escapeExcelCell(prefix + indent + item.tag)}</td>
+          <td>${escapeExcelCell(item.indent > 0 ? '↳ ' : '' + tagName)}</td>
+          <td>${escapeExcelCell(item.length)}</td>
+          <td style="mso-number-format:'\\@';">${escapeExcelCell(valueHex)}</td>
+          <td style="mso-number-format:'\\@';">${escapeExcelCell(valueAscii)}</td>
+        </tr>
+      `;
+    };
+
+    const rows = tlvData.map((item) => formatRow(item)).join('');
 
     const workbookHtml = `
       <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
@@ -431,25 +465,54 @@ const EmvTlvParser = ({ className = '' }) => {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-black divide-y divide-slate-200 dark:divide-zinc-800">
-                {tlvData.map((item, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-white dark:bg-black' : 'bg-slate-50 dark:bg-zinc-900'}>
-                    <td className="px-2 sm:px-3 md:px-4 py-2 whitespace-nowrap">
-                      <code className="text-[10px] sm:text-xs md:text-sm font-mono bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
-                        {item.tag}
-                      </code>
-                    </td>
-                    <td className="px-2 sm:px-3 md:px-4 py-2 text-[10px] sm:text-xs md:text-sm text-slate-900 dark:text-slate-100 truncate max-w-[120px] sm:max-w-[180px] md:max-w-none" title={item.tagName}>
-                      {item.tagName}
-                    </td>
-                    <td className="px-2 sm:px-3 md:px-4 py-2 whitespace-nowrap text-[10px] sm:text-xs md:text-sm text-slate-600 dark:text-slate-400">{item.length}</td>
-                    <td className="hidden md:table-cell px-2 sm:px-3 md:px-4 py-2 text-[10px] sm:text-xs md:text-sm font-mono text-slate-600 dark:text-slate-400 truncate max-w-[120px] sm:max-w-none" title={item.valueHex}>
-                      {item.valueHex}
-                    </td>
-                    <td className="hidden lg:table-cell px-2 sm:px-3 md:px-4 py-2 text-[10px] sm:text-xs md:text-sm font-mono text-slate-600 dark:text-slate-400 truncate max-w-[100px] sm:max-w-[120px]">
-                      {item.valueAscii || <span className="text-slate-400 dark:text-zinc-500 italic">N/A</span>}
-                    </td>
-                  </tr>
-                ))}
+                {tlvData.map((item, index) => {
+                  const isConstruct = item.isConstruct;
+                  const isChild = item.indent > 0;
+                  const rowClass = isConstruct
+                    ? 'bg-blue-50 dark:bg-blue-900/20 font-semibold'
+                    : isChild
+                    ? 'bg-amber-50 dark:bg-amber-900/20'
+                    : index % 2 === 0 ? 'bg-white dark:bg-black' : 'bg-slate-50 dark:bg-zinc-900';
+
+                  return (
+                    <tr key={index} className={rowClass}>
+                      <td className="px-2 sm:px-3 md:px-4 py-2 whitespace-nowrap">
+                        <div className="flex items-center gap-1">
+                          {isChild && (
+                            <span className="text-slate-400 dark:text-zinc-500 text-xs">└</span>
+                          )}
+                          <code className={`text-[10px] sm:text-xs md:text-sm font-mono ${
+                            isConstruct
+                              ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                              : isChild
+                              ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                              : 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                          } px-1.5 sm:px-2 py-0.5 sm:py-1 rounded`}>
+                            {item.tag}
+                          </code>
+                        </div>
+                      </td>
+                      <td className="px-2 sm:px-3 md:px-4 py-2 text-[10px] sm:text-xs md:text-sm text-slate-900 dark:text-slate-100 truncate max-w-[120px] sm:max-w-[180px] md:max-w-none" title={item.tagName}>
+                        {isChild && <span className="text-slate-400 dark:text-zinc-500 mr-1">↳</span>}
+                        {item.tagName}
+                        {isConstruct && (
+                          <span className="ml-1 text-[10px] text-slate-500 dark:text-zinc-500">
+                            [{item.children?.length || 0} nested]
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-2 sm:px-3 md:px-4 py-2 whitespace-nowrap text-[10px] sm:text-xs md:text-sm text-slate-600 dark:text-slate-400">{item.length}</td>
+                      <td className="hidden md:table-cell px-2 sm:px-3 md:px-4 py-2 text-[10px] sm:text-xs md:text-sm font-mono text-slate-600 dark:text-slate-400 truncate max-w-[120px] sm:max-w-none" title={item.valueHex}>
+                        {isConstruct ? <span className="text-slate-400 dark:text-zinc-500 italic">CONSTRUCT</span> : item.valueHex}
+                      </td>
+                      <td className="hidden lg:table-cell px-2 sm:px-3 md:px-4 py-2 text-[10px] sm:text-xs md:text-sm font-mono text-slate-600 dark:text-slate-400 truncate max-w-[100px] sm:max-w-[120px]">
+                        {isConstruct ? <span className="text-slate-400 dark:text-zinc-500 italic">N/A</span> : (
+                          item.valueAscii || <span className="text-slate-400 dark:text-zinc-500 italic">N/A</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
