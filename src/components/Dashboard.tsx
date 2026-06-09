@@ -150,6 +150,8 @@ const Dashboard = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      // Skip if Ctrl or Cmd key is pressed (allows copy, paste, select all, etc.)
+      if (e.ctrlKey || e.metaKey) return;
       if (e.key === '?') {
         e.preventDefault();
         setShowKeyboardShortcuts(prev => !prev);

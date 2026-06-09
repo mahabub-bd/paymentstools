@@ -16,6 +16,8 @@
     "react-dom": "^19.2.6",
     "react-hook-form": "^7.76.0",
     "react-router-dom": "^7.15.1",
+    "xlsx": "^0.18.5",
+    "xlsx-js-style": "^1.2.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

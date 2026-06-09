@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import * as XLSX from 'xlsx-js-style';
 import { hexToAscii, parseEMVTLV, getEMVTagDefinition } from '../utils/iso8583VersionParser/emv-tlv';
 
 interface ParsedTlvRow {
@@ -212,15 +213,6 @@ const EmvTlvParser = ({ className = '' }) => {
     return rows;
   }, [formatTlvToRow]);
 
-  const escapeExcelCell = useCallback((value: string | number) => (
-    String(value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;')
-  ), []);
-
   // Calculate statistics
   const stats = useMemo(() => ({
     totalTags: tlvData.length,
@@ -234,7 +226,8 @@ const EmvTlvParser = ({ className = '' }) => {
     const cleanInput = input.replace(/\s/g, '').toUpperCase();
     const generatedAt = new Date().toLocaleString();
 
-    const formatRow = (item: ParsedTlvRow, prefix = ''): string => {
+    // Format a single row
+    const formatRow = (item: ParsedTlvRow): string[] => {
       const indent = '  '.repeat(item.indent);
       const valueHex = item.isConstruct ? 'CONSTRUCT' : item.valueHex;
       const valueAscii = item.isConstruct ? 'N/A' : (item.valueAscii || 'N/A');
@@ -247,68 +240,106 @@ const EmvTlvParser = ({ className = '' }) => {
         tagName = '↳ ' + tagName;
       }
 
-      return `
-        <tr>
-          <td style="mso-number-format:'\\@';">${escapeExcelCell(prefix + indent + item.tag)}</td>
-          <td>${escapeExcelCell(tagName)}</td>
-          <td>${escapeExcelCell(item.length)}</td>
-          <td style="mso-number-format:'\\@';">${escapeExcelCell(valueHex)}</td>
-          <td style="mso-number-format:'\\@';">${escapeExcelCell(valueAscii)}</td>
-        </tr>
-      `;
+      return [
+        indent + item.tag,
+        tagName,
+        String(item.length),
+        valueHex,
+        valueAscii,
+      ];
     };
 
-    const rows = tlvData.map((item) => formatRow(item)).join('');
+    // Create header and data rows
+    const headerData = [
+      ['EMV TLV Parser Output'],
+      ['Generated At', generatedAt],
+      ['Input Hex', cleanInput],
+      ['Total Tags', stats.totalTags, 'Total Bytes', stats.totalBytes],
+      ['Unique Tags', stats.uniqueTags],
+      [], // Empty row
+      ['Tag', 'Name', 'Length', 'Value (Hex)', 'Value (ASCII)'],
+    ];
 
-    const workbookHtml = `
-      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-        <head>
-          <meta charset="UTF-8" />
-          <!--[if gte mso 9]>
-          <xml>
-            <x:ExcelWorkbook>
-              <x:ExcelWorksheets>
-                <x:ExcelWorksheet>
-                  <x:Name>EMV TLV Output</x:Name>
-                  <x:WorksheetOptions><x:DisplayGridlines /></x:WorksheetOptions>
-                </x:ExcelWorksheet>
-              </x:ExcelWorksheets>
-            </x:ExcelWorkbook>
-          </xml>
-          <![endif]-->
-        </head>
-        <body>
-          <table>
-            <tr><th colspan="5" style="font-size:16px;text-align:left;">EMV TLV Parser Output</th></tr>
-            <tr><td><strong>Generated At</strong></td><td colspan="4">${escapeExcelCell(generatedAt)}</td></tr>
-            <tr><td><strong>Input Hex</strong></td><td colspan="4" style="mso-number-format:'\\@';">${escapeExcelCell(cleanInput)}</td></tr>
-            <tr><td><strong>Total Tags</strong></td><td>${escapeExcelCell(stats.totalTags)}</td><td><strong>Total Bytes</strong></td><td>${escapeExcelCell(stats.totalBytes)}</td><td></td></tr>
-            <tr><td><strong>Unique Tags</strong></td><td>${escapeExcelCell(stats.uniqueTags)}</td><td colspan="3"></td></tr>
-            <tr></tr>
-            <tr>
-              <th style="background:#dbeafe;">Tag</th>
-              <th style="background:#dbeafe;">Name</th>
-              <th style="background:#dbeafe;">Length</th>
-              <th style="background:#dbeafe;">Value (Hex)</th>
-              <th style="background:#dbeafe;">Value (ASCII)</th>
-            </tr>
-            ${rows}
-          </table>
-        </body>
-      </html>
-    `;
+    const dataRows = tlvData.map((item) => formatRow(item));
+    const allRows = [...headerData, ...dataRows];
 
-    const blob = new Blob([workbookHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    // Create worksheet
+    const ws = XLSX.utils.aoa_to_sheet(allRows);
+
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 15 }, // Tag
+      { wch: 35 }, // Name
+      { wch: 10 }, // Length
+      { wch: 40 }, // Value (Hex)
+      { wch: 35 }, // Value (ASCII)
+    ];
+
+    // Define cell styles
+    const borderStyle = {
+      style: 'thin',
+      color: { auto: 1 }
+    };
+
+    const cellStyle = {
+      top: borderStyle,
+      bottom: borderStyle,
+      left: borderStyle,
+      right: borderStyle
+    };
+
+    // Apply borders and styles to all cells
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+        if (!ws[cellAddress]) continue;
+
+        // Header row (row 6, 0-indexed = 5)
+        if (R === 5) {
+          ws[cellAddress].s = {
+            border: cellStyle,
+            fill: { fgColor: { rgb: 'dbeafe' } },
+            font: { bold: true },
+            alignment: { horizontal: 'center', vertical: 'center' }
+          };
+        } else {
+          // Input Hex cell (row 2, columns B-E) - enable wrap text
+          const isInputHexCell = (R === 2 && C >= 1 && C <= 4);
+          ws[cellAddress].s = {
+            border: cellStyle,
+            alignment: {
+              vertical: 'center',
+              horizontal: 'left',
+              wrapText: isInputHexCell
+            }
+          };
+        }
+      }
+    }
+
+    // Merge cells for title row and input hex
+    const merges = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }, // Title row A1:E1
+      { s: { r: 2, c: 1 }, e: { r: 2, c: 4 } }, // Input Hex B3:E3
+    ];
+    ws['!merges'] = merges;
+
+    if (ws['A1']) {
+      ws['A1'].s = {
+        font: { bold: true, sz: 14 },
+        alignment: { horizontal: 'left' }
+      };
+    }
+
+    // Create workbook and add worksheet
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'EMV TLV Output');
+
+    // Generate and download
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    link.href = url;
-    link.download = `emv-tlv-parser-output-${timestamp}.xls`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }, [escapeExcelCell, input, stats.totalBytes, stats.totalTags, stats.uniqueTags, tlvData]);
+    XLSX.writeFile(wb, `emv-tlv-parser-output-${timestamp}.xlsx`);
+  }, [input, stats.totalBytes, stats.totalTags, stats.uniqueTags, tlvData]);
 
   const handleParse = useCallback(() => {
     try {

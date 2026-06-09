@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
-import { parseEMVTLV, getEMVTagDefinition, TLVData, hexToAscii } from '../utils/iso8583VersionParser/emv-tlv';
+import * as XLSX from 'xlsx-js-style';
+import { parseEMVTLV, getEMVTagDefinition, hexToAscii } from '../utils/iso8583VersionParser/emv-tlv';
 
 interface ComparisonResult {
   tag: string;
@@ -34,8 +35,6 @@ const EmvTlvComparator = ({ className = '' }) => {
   const [title2, setTitle2] = useState('Message 2');
   const [error, setError] = useState('');
   const [comparisonResults, setComparisonResults] = useState<ComparisonResult[]>([]);
-  const [parsed1, setParsed1] = useState<ParsedTlvRow[]>([]);
-  const [parsed2, setParsed2] = useState<ParsedTlvRow[]>([]);
 
   // Helper to check if raw hex bytes are all printable ASCII
   const isAllPrintableHex = useCallback((hex: string): boolean => {
@@ -121,16 +120,11 @@ const EmvTlvComparator = ({ className = '' }) => {
 
       if (!message1.trim() || !message2.trim()) {
         setComparisonResults([]);
-        setParsed1([]);
-        setParsed2([]);
         return;
       }
 
       const parsed1Data = parseTlv(message1);
       const parsed2Data = parseTlv(message2);
-
-      setParsed1(parsed1Data);
-      setParsed2(parsed2Data);
 
       // Create maps for easier comparison
       const map1 = new Map(parsed1Data.filter(item => !item.parentId).map(item => [item.tag, item]));
@@ -155,12 +149,21 @@ const EmvTlvComparator = ({ className = '' }) => {
           status = 'same';
         }
 
+        // Use ASCII value for ASCII-formatted tags, otherwise use HEX
+        const getValue = (item: ParsedTlvRow | undefined) => {
+          if (!item) return '';
+          if (tagDef?.format === 'ASCII' && item.valueAscii) {
+            return item.valueAscii;
+          }
+          return item.valueHex;
+        };
+
         results.push({
           tag,
           tagName: tagDef?.name || 'Unknown Tag',
           status,
-          message1Value: item1?.valueHex || '',
-          message2Value: item2?.valueHex || '',
+          message1Value: getValue(item1) || '',
+          message2Value: getValue(item2) || '',
           message1Length: item1?.length || 0,
           message2Length: item2?.length || 0,
           category: tagDef?.category || 'Unknown',
@@ -179,8 +182,6 @@ const EmvTlvComparator = ({ className = '' }) => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to compare TLV data');
       setComparisonResults([]);
-      setParsed1([]);
-      setParsed2([]);
     }
   }, [message1, message2, parseTlv]);
 
@@ -192,15 +193,6 @@ const EmvTlvComparator = ({ className = '' }) => {
     modified: comparisonResults.filter(r => r.status === 'modified').length,
   }), [comparisonResults]);
 
-  const escapeExcelCell = useCallback((value: string | number) => (
-    String(value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;')
-  ), []);
-
   // Download comparison results as Excel
   const handleDownloadExcel = useCallback(() => {
     if (comparisonResults.length === 0) return;
@@ -211,89 +203,122 @@ const EmvTlvComparator = ({ className = '' }) => {
     const displayTitle1 = title1.trim() || 'Message 1';
     const displayTitle2 = title2.trim() || 'Message 2';
 
-    const getStatusColor = (status: string) => {
-      switch (status) {
-        case 'added': return '#d1fae5';
-        case 'removed': return '#fee2e2';
-        case 'modified': return '#fef3c7';
-        default: return '#f3f4f6';
-      }
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+
+    // Create header section
+    const headerData = [
+      ['EMV TLV Comparison Report'],
+      ['Generated At', generatedAt],
+      [displayTitle1, cleanMsg1],
+      [displayTitle2, cleanMsg2],
+      ['Total Tags', comparisonResults.length, 'Same', stats.same, 'Added', stats.added, 'Removed', stats.removed, 'Modified', stats.modified],
+      [], // Empty row
+      ['Tag', 'Name', 'Category', 'Status', `${displayTitle1} Value (Hex)`, `${displayTitle1} Length`, `${displayTitle2} Value (Hex)`, `${displayTitle2} Length`],
+    ];
+
+    // Create data rows
+    const dataRows = comparisonResults.map((result) => [
+      result.tag,
+      result.tagName,
+      result.category,
+      result.status.toUpperCase(),
+      result.message1Value || 'N/A',
+      result.message1Length || 0,
+      result.message2Value || 'N/A',
+      result.message2Length || 0,
+    ]);
+
+    // Combine all rows
+    const allRows = [...headerData, ...dataRows];
+
+    // Create worksheet
+    const ws = XLSX.utils.aoa_to_sheet(allRows);
+
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 10 }, // Tag
+      { wch: 30 }, // Name
+      { wch: 15 }, // Category
+      { wch: 12 }, // Status
+      { wch: 35 }, // Msg1 Value
+      { wch: 10 }, // Msg1 Length
+      { wch: 35 }, // Msg2 Value
+      { wch: 10 }, // Msg2 Length
+    ];
+
+    // Define cell styles
+    const borderStyle = {
+      style: 'thin',
+      color: { auto: 1 }
     };
 
-    const rows = comparisonResults.map((result) => {
-      const statusIcon = {
-        added: '✓',
-        removed: '✗',
-        modified: '~',
-        same: '='
-      }[result.status];
+    const headerBorderStyle = {
+      top: borderStyle,
+      bottom: borderStyle,
+      left: borderStyle,
+      right: borderStyle
+    };
 
-      return `
-        <tr>
-          <td style="background:${getStatusColor(result.status)};mso-number-format:'\\@';">${escapeExcelCell(result.tag)}</td>
-          <td style="background:${getStatusColor(result.status)};">${escapeExcelCell(result.tagName)}</td>
-          <td style="background:${getStatusColor(result.status)};">${escapeExcelCell(result.category)}</td>
-          <td style="background:${getStatusColor(result.status)};text-align:center;">${statusIcon} ${result.status.toUpperCase()}</td>
-          <td style="background:${getStatusColor(result.status)};mso-number-format:'\\@';">${escapeExcelCell(result.message1Value || 'N/A')}</td>
-          <td style="background:${getStatusColor(result.status)};">${escapeExcelCell(result.message1Length || 0)}</td>
-          <td style="background:${getStatusColor(result.status)};mso-number-format:'\\@';">${escapeExcelCell(result.message2Value || 'N/A')}</td>
-          <td style="background:${getStatusColor(result.status)};">${escapeExcelCell(result.message2Length || 0)}</td>
-        </tr>
-      `;
-    }).join('');
+    const cellBorderStyle = {
+      top: borderStyle,
+      bottom: borderStyle,
+      left: borderStyle,
+      right: borderStyle
+    };
 
-    const workbookHtml = `
-      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-        <head>
-          <meta charset="UTF-8" />
-          <!--[if gte mso 9]>
-          <xml>
-            <x:ExcelWorkbook>
-              <x:ExcelWorksheets>
-                <x:ExcelWorksheet>
-                  <x:Name>EMV TLV Comparison</x:Name>
-                  <x:WorksheetOptions><x:DisplayGridlines /></x:WorksheetOptions>
-                </x:ExcelWorksheet>
-              </x:ExcelWorksheets>
-            </x:ExcelWorkbook>
-          </xml>
-          <![endif]-->
-        </head>
-        <body>
-          <table>
-            <tr><th colspan="8" style="font-size:16px;text-align:left;">EMV TLV Comparison Report</th></tr>
-            <tr><td><strong>Generated At</strong></td><td colspan="7">${escapeExcelCell(generatedAt)}</td></tr>
-            <tr><td><strong>${escapeExcelCell(displayTitle1)}</strong></td><td colspan="7" style="mso-number-format:'\\@';">${escapeExcelCell(cleanMsg1)}</td></tr>
-            <tr><td><strong>${escapeExcelCell(displayTitle2)}</strong></td><td colspan="7" style="mso-number-format:'\\@';">${escapeExcelCell(cleanMsg2)}</td></tr>
-            <tr><td><strong>Total Tags</strong></td><td>${escapeExcelCell(comparisonResults.length)}</td><td><strong>Same</strong></td><td>${escapeExcelCell(stats.same)}</td><td><strong>Added</strong></td><td>${escapeExcelCell(stats.added)}</td><td><strong>Removed</strong></td><td>${escapeExcelCell(stats.removed)}</td><td><strong>Modified</strong></td><td>${escapeExcelCell(stats.modified)}</td></tr>
-            <tr></tr>
-            <tr>
-              <th style="background:#dbeafe;">Tag</th>
-              <th style="background:#dbeafe;">Name</th>
-              <th style="background:#dbeafe;">Category</th>
-              <th style="background:#dbeafe;">Status</th>
-              <th style="background:#dbeafe;">${escapeExcelCell(displayTitle1)} Value (Hex)</th>
-              <th style="background:#dbeafe;">${escapeExcelCell(displayTitle1)} Length</th>
-              <th style="background:#dbeafe;">${escapeExcelCell(displayTitle2)} Value (Hex)</th>
-              <th style="background:#dbeafe;">${escapeExcelCell(displayTitle2)} Length</th>
-            </tr>
-            ${rows}
-          </table>
-        </body>
-      </html>
-    `;
+    // Apply borders and styles to all cells
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+        if (!ws[cellAddress]) continue;
 
-    const blob = new Blob([workbookHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+        // Header row (row 7, 0-indexed = 6)
+        if (R === 6) {
+          ws[cellAddress].s = {
+            border: headerBorderStyle,
+            fill: { fgColor: { rgb: 'dbeafe' } },
+            font: { bold: true },
+            alignment: { horizontal: 'center', vertical: 'center' }
+          };
+        } else {
+          // Message value cells (rows 2-3, columns B-H) - enable wrap text
+          const isMessageValueCell = ((R === 2 || R === 3) && C >= 1 && C <= 7);
+          ws[cellAddress].s = {
+            border: cellBorderStyle,
+            alignment: {
+              vertical: 'center',
+              horizontal: isMessageValueCell ? 'left' : 'left',
+              wrapText: isMessageValueCell
+            }
+          };
+        }
+      }
+    }
+
+    // Merge cells for title row and message values
+    const merges = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }, // Title row A1:H1
+      { s: { r: 2, c: 1 }, e: { r: 2, c: 7 } }, // Message 1 value B3:H3
+      { s: { r: 3, c: 1 }, e: { r: 3, c: 7 } }, // Message 2 value B4:H4
+    ];
+    ws['!merges'] = merges;
+
+    if (ws['A1']) {
+      ws['A1'].s = {
+        font: { bold: true, sz: 14 },
+        alignment: { horizontal: 'left' }
+      };
+    }
+
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'EMV TLV Comparison');
+
+    // Generate and download
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    link.href = url;
-    link.download = `emv-tlv-comparison-${timestamp}.xls`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }, [comparisonResults, escapeExcelCell, message1, message2, stats, title1, title2]);
+    XLSX.writeFile(wb, `emv-tlv-comparison-${timestamp}.xlsx`);
+  }, [comparisonResults, message1, message2, stats, title1, title2]);
 
   // Load example messages
   const handleExample = useCallback(() => {
@@ -311,8 +336,6 @@ const EmvTlvComparator = ({ className = '' }) => {
     setTitle1('Message 1');
     setTitle2('Message 2');
     setComparisonResults([]);
-    setParsed1([]);
-    setParsed2([]);
     setError('');
   }, []);
 
