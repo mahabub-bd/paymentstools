@@ -14,6 +14,8 @@ const CardGenerator = lazy(() => import('./CardGenerator'));
 const ConverterTools = lazy(() => import('./ConverterTools'));
 const EmvTlvParser = lazy(() => import('./EmvTlvParser'));
 const EmvTlvBuilder = lazy(() => import('./EmvTlvBuilder'));
+const EmvTlvComparator = lazy(() => import('./EmvTlvComparator'));
+const CavvDecoder = lazy(() => import('./CavvDecoder'));
 const TrackGenerator = lazy(() => import('./TrackGenerator'));
 const Iso8583VersionParser = lazy(() => import('./Iso8583VersionParser'));
 const IsoBitmapEditor = lazy(() => import('./IsoBitmapEditor'));
@@ -254,6 +256,8 @@ const Dashboard = () => {
                 <Route path="/thaleshsm" element={<ThalesHsmCommands />} />
                 <Route path="/tlv" element={<EmvTlvParser />} />
                 <Route path="/tlvbuilder" element={<EmvTlvBuilder />} />
+                <Route path="/tlvcomparator" element={<EmvTlvComparator />} />
+                <Route path="/cavv" element={<CavvDecoder />} />
                 <Route path="/emvtags" element={<EmvNfcTags />} />
                 <Route path="/emvrid" element={<EmvRIDReference />} />
                 <Route path="/emvcryptogram" element={<EmvCryptogramCalculator />} />

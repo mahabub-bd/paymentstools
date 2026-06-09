@@ -18,6 +18,8 @@ export const menuItems: MenuItem[] = [
   { id: 'posentry', label: 'POS Entry Mode', icon: '🖥️', category: 'iso8583', description: 'Decode Field 22 - POS Entry Mode', shortcut: '5' },
   { id: 'tlv', label: 'TLV Parser', icon: '📋', category: 'emv', description: 'Parse EMV TLV data', shortcut: '6' },
   { id: 'tlvbuilder', label: 'TLV Builder', icon: '🔧', category: 'emv', description: 'Build EMV TLV data structures', shortcut: 'b' },
+  { id: 'tlvcomparator', label: 'TLV Comparator', icon: '🔍', category: 'emv', description: 'Compare two EMV TLV messages', shortcut: 'o' },
+  { id: 'cavv', label: 'CAVV Decoder', icon: '🔐', category: 'emv', description: 'Decode Cardholder Authentication Verification Value', shortcut: 'z' },
   { id: 'trackgen', label: 'Track Generator', icon: '💳', category: 'utilities', description: 'Generate card Track 1 & Track 2 data', shortcut: 'f' },
   { id: 'emvtags', label: 'EMV & NFC Tags', icon: '🏷️', category: 'emv', description: 'Complete EMV & NFC tag reference', shortcut: '7' },
   { id: 'emvrid', label: 'RID Reference', icon: '📇', category: 'emv', description: 'Registered Application Provider IDs', shortcut: 'r' },
