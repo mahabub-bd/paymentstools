@@ -88,6 +88,7 @@ export const EMV_TAG_DEFINITIONS: Record<string, EMVTagDefinition> = {
   '5F25': { tag: '5F25', name: 'Application Effective Date', category: EMVTagCategory.CARD_DATA, format: 'DATE', description: 'YYMMDD' },
   '5F28': { tag: '5F28', name: 'Issuer Country Code', category: EMVTagCategory.CARD_DATA, format: 'NUMERIC' },
   '5F2A': { tag: '5F2A', name: 'Transaction Currency Code', category: EMVTagCategory.CURRENCY, format: 'NUMERIC' },
+  '5F2D': { tag: '5F2D', name: 'Language Preference', category: EMVTagCategory.CARD_DATA, format: 'ASCII', description: 'Cardholder preferred language(s) in ISO 639 format' },
   '5F30': { tag: '5F30', name: 'Service Code', category: EMVTagCategory.CARD_DATA, format: 'NUMERIC' },
   '5F34': { tag: '5F34', name: 'Application PAN Sequence Number', category: EMVTagCategory.CARD_DATA, format: 'NUMERIC', description: 'Differentiates cards with same PAN' },
 
