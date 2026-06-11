@@ -30,6 +30,9 @@ Payment Tools is an open-source web application designed for payment card indust
 
 ### EMV Tools
 - TLV (Tag-Length-Value) Parser
+- TLV Builder - Construct EMV TLV data structures
+- TLV Comparator - Compare two EMV TLV messages
+- CAVV Decoder - Decode Cardholder Authentication Verification Value
 - Complete EMV & NFC tag reference
 - RID (Registered Application Provider) reference
 - Cryptogram Calculator (ARQC/ARPC)
@@ -55,6 +58,7 @@ Payment Tools is an open-source web application designed for payment card indust
 
 ### Utilities
 - Card Generator (Visa, Mastercard, Amex, Discover, JCB, UnionPay, TakaPay)
+- Track Generator - Generate card Track 1 & Track 2 data
 - Hex, ASCII, Base64 converters
 
 ## Installation
@@ -109,11 +113,14 @@ npm run preview
 | **Thales HSM** | `4` | Thales HSM Commands Reference |
 | **POS Entry Mode** | `5` | Decode Field 22 - POS Entry Mode codes |
 
-### EMV Tools (10 tools)
+### EMV Tools (13 tools)
 
 | Tool | Shortcut | Description |
 |------|----------|-------------|
 | **TLV Parser** | `6` | Parse EMV TLV data with tag descriptions |
+| **TLV Builder** | `B` | Build and construct EMV TLV data structures |
+| **TLV Comparator** | `O` | Compare two EMV TLV messages |
+| **CAVV Decoder** | `Z` | Decode Cardholder Authentication Verification Value |
 | **EMV & NFC Tags** | `7` | Complete EMV & NFC tag reference guide |
 | **RID Reference** | `R` | Registered Application Provider IDs |
 | **Cryptogram Calc** | `A` | Calculate ARQC/ARPC for EMV transactions |
@@ -143,11 +150,12 @@ npm run preview
 | **Payment Keys** | `K` | TMK, TPK, TAK, ZMK, ZPK, ZAK, LMK reference |
 | **Knowledge Base** | `L` | Payment system articles & guides |
 
-### Utilities (2 tools)
+### Utilities (3 tools)
 
 | Tool | Shortcut | Description |
 |------|----------|-------------|
 | **Card Generator** | `G` | Generate test card numbers with Track data |
+| **Track Generator** | `F` | Generate card Track 1 & Track 2 data |
 | **Converters** | `T` | Hex, ASCII, Base64 encoding/decoding |
 
 ## Tech Stack
@@ -160,6 +168,7 @@ npm run preview
 - **React Router** - Client-side routing
 - **React Hook Form** - Form management
 - **Zod** - Schema validation
+- **XLSX (SheetJS)** - Excel export/import functionality
 
 ## Keyboard Shortcuts
 
@@ -176,14 +185,17 @@ npm run preview
 | `9` | PIN from Block |
 | `0` | Visa PVV |
 | `A` | Cryptogram Calculator |
+| `B` | TLV Builder |
 | `C` | CVV Calculator |
 | `D` | IAD Decoder |
 | `E` | MCC List |
+| `F` | Track Generator |
 | `G` | Card Generator |
 | `I` | AID List |
 | `K` | Payment Keys |
 | `L` | Knowledge Base |
 | `M` | MAC Calculator |
+| `O` | TLV Comparator |
 | `Q` | Terminal Capabilities |
 | `R` | RID Reference |
 | `T` | Converters |
@@ -192,6 +204,7 @@ npm run preview
 | `W` | Service Codes |
 | `X` | CVR Decoder |
 | `Y` | CVM Results |
+| `Z` | CAVV Decoder |
 | `[` | Toggle sidebar |
 | `?` | Show keyboard shortcuts |
 | `Esc` | Close modal |
@@ -238,6 +251,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you find this tool useful, please consider giving it a ⭐ on GitHub!
 
----
 
 
