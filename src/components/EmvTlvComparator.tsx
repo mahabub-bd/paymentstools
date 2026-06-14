@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx-js-style';
-import { parseEMVTLV, getEMVTagDefinition, hexToAscii } from '../utils/iso8583VersionParser/emv-tlv';
+import { getEMVTagDefinition, hexToAscii, parseEMVTLV } from '../utils/iso8583VersionParser/emv-tlv';
 
 interface ComparisonResult {
   tag: string;
@@ -210,8 +210,8 @@ const EmvTlvComparator = ({ className = '' }) => {
     const headerData = [
       ['EMV TLV Comparison Report'],
       ['Generated At', generatedAt],
-      [displayTitle1, cleanMsg1],
-      [displayTitle2, cleanMsg2],
+      [`${displayTitle1}: ${cleanMsg1}`],
+      [`${displayTitle2}: ${cleanMsg2}`],
       ['Total Tags', comparisonResults.length, 'Same', stats.same, 'Added', stats.added, 'Removed', stats.removed, 'Modified', stats.modified],
       [], // Empty row
       ['Tag', 'Name', 'Category', 'Status', `${displayTitle1} Value (Hex)`, `${displayTitle1} Length`, `${displayTitle2} Value (Hex)`, `${displayTitle2} Length`],
@@ -283,13 +283,13 @@ const EmvTlvComparator = ({ className = '' }) => {
             alignment: { horizontal: 'center', vertical: 'center' }
           };
         } else {
-          // Message value cells (rows 2-3, columns B-H) - enable wrap text
-          const isMessageValueCell = ((R === 2 || R === 3) && C >= 1 && C <= 7);
+          // Message value cells (rows 2-3) - enable wrap text
+          const isMessageValueCell = (R === 2 || R === 3);
           ws[cellAddress].s = {
             border: cellBorderStyle,
             alignment: {
               vertical: 'center',
-              horizontal: isMessageValueCell ? 'left' : 'left',
+              horizontal: 'left',
               wrapText: isMessageValueCell
             }
           };
@@ -300,8 +300,8 @@ const EmvTlvComparator = ({ className = '' }) => {
     // Merge cells for title row and message values
     const merges = [
       { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }, // Title row A1:H1
-      { s: { r: 2, c: 1 }, e: { r: 2, c: 7 } }, // Message 1 value B3:H3
-      { s: { r: 3, c: 1 }, e: { r: 3, c: 7 } }, // Message 2 value B4:H4
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 7 } }, // Message 1 A3:H3
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 7 } }, // Message 2 A4:H4
     ];
     ws['!merges'] = merges;
 
