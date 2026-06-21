@@ -44,6 +44,7 @@ export const menuItems: MenuItem[] = [
   { id: 'mcclist', label: 'MCC List', icon: '🏪', category: 'reference', description: 'Merchant Category Codes', shortcut: 'e' },
   { id: 'aidlist', label: 'AID List', icon: '📋', category: 'reference', description: 'EMV Application Identifiers', shortcut: 'i' },
   { id: 'paymentkeys', label: 'Payment Keys', icon: '🔑', category: 'reference', description: 'TMK, TPK, TAK, ZMK, ZPK, ZAK, LMK', shortcut: 'k' },
+  { id: 'emvtestkeys', label: 'EMV Test Keys', icon: '🔐', category: 'reference', description: 'Issuer EMV test keys (MasterCard & VISA)', shortcut: 'j' },
   { id: 'knowledgebase', label: 'Knowledge Base', icon: '📚', category: 'reference', description: 'Payment system articles & guides', shortcut: 'l' },
 
   // Utilities

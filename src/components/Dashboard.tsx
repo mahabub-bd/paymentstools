@@ -40,6 +40,7 @@ const IadDecoder = lazy(() => import('./IadDecoder'));
 const CvrDecoder = lazy(() => import('./CvrDecoder'));
 const TerminalCapabilitiesDecoder = lazy(() => import('./TerminalCapabilitiesDecoder'));
 const KnowledgeBase = lazy(() => import('./KnowledgeBase'));
+const IssuerEmvTestKeys = lazy(() => import('./IssuerEmvTestKeys'));
 const AidList = lazy(() => import('./AidList'));
 
 const ToolFallback = () => (
@@ -281,6 +282,7 @@ const Dashboard = () => {
                 <Route path="/aidlist" element={<AidList />} />
                 <Route path="/posentry" element={<PosEntryModeDecoder />} />
                 <Route path="/paymentkeys" element={<PaymentKeysReference />} />
+                <Route path="/emvtestkeys" element={<IssuerEmvTestKeys />} />
                 <Route path="/knowledgebase" element={<KnowledgeBase />} />
               </Routes>
             </Suspense>

@@ -13,11 +13,38 @@ interface VisaPVVResult {
   pvv: string;
 }
 
+// EMV Test Keys from IssuerEmvTestKeys component
+interface EmvTestKey {
+  issuer: string;
+  cardName: string;
+  authKey: string;
+  macKey: string;
+  dataKey: string;
+}
+
+const EMV_TEST_KEYS: EmvTestKey[] = [
+  {
+    issuer: 'MasterCard',
+    cardName: 'MTIP Test',
+    authKey: '9E15204313F7318ACB79B90BD986AD29',
+    macKey: '4664942FE615FB02E5D57F292AA2B3B6',
+    dataKey: 'CE293B8CC12A977379EF256D76109492'
+  },
+  {
+    issuer: 'VISA',
+    cardName: 'ADVT Test',
+    authKey: '2315208C9110AD402315208C9110AD40',
+    macKey: '2315208C9110AD402315208C9110AD40',
+    dataKey: '2315208C9110AD402315208C9110AD40'
+  }
+];
+
 const VisaPVV = ({ className = '' }: { className?: string }) => {
   const [pan, setPan] = useState('');
   const [pin, setPin] = useState('');
   const [pvk, setPvk] = useState('');
-  const [pvkIndex, setPvkIndex] = useState('');
+  const [pvkIndex, setPvkIndex] = useState('000001');
+  const [selectedTestKey, setSelectedTestKey] = useState('');
   const [result, setResult] = useState<VisaPVVResult | null>(null);
   const [error, setError] = useState('');
   const [showDetails, setShowDetails] = useState(false);
@@ -126,10 +153,34 @@ const VisaPVV = ({ className = '' }: { className?: string }) => {
     setPan('');
     setPin('');
     setPvk('');
-    setPvkIndex('');
+    setPvkIndex('000001');
+    setSelectedTestKey('');
     setResult(null);
     setError('');
     setShowDetails(false);
+  }, []);
+
+  const handleSelectTestKey = useCallback((value: string) => {
+    setSelectedTestKey(value);
+    if (value === 'none') {
+      setPvk('');
+      return;
+    }
+
+    const [issuerIndex, keyType] = value.split('-');
+    const index = parseInt(issuerIndex);
+    const testKey = EMV_TEST_KEYS[index];
+
+    if (testKey) {
+      // Use the selected key type (auth, mac, or data)
+      if (keyType === 'auth') {
+        setPvk(testKey.authKey);
+      } else if (keyType === 'mac') {
+        setPvk(testKey.macKey);
+      } else if (keyType === 'data') {
+        setPvk(testKey.dataKey);
+      }
+    }
   }, []);
 
   const formatPan = (value) => {
@@ -177,14 +228,14 @@ const VisaPVV = ({ className = '' }: { className?: string }) => {
           {/* PAN Input */}
           <div>
             <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
-              PAN (Card Number)
+              PAN (Card Number) - 13 to 19 digits
             </label>
             <input
               type="text"
               value={pan}
               onChange={(e) => setPan(formatPan(e.target.value))}
               placeholder="4929 7400 0000 0003"
-              maxLength={19}
+              maxLength={23}
               className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
             />
           </div>
@@ -206,9 +257,12 @@ const VisaPVV = ({ className = '' }: { className?: string }) => {
 
           {/* PVK Input */}
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
-              PVK (32 hex characters)
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium">
+                PVK (32 hex characters)
+              </label>
+              <span className="text-xs text-blue-600 dark:text-blue-400">🔐 Quick Select</span>
+            </div>
             <input
               type="text"
               value={pvk}
@@ -217,6 +271,27 @@ const VisaPVV = ({ className = '' }: { className?: string }) => {
               maxLength={35}
               className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-xs tracking-wider bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
             />
+            {/* EMV Test Keys Quick Select */}
+            <div className="mt-2">
+              <select
+                value={selectedTestKey}
+                onChange={(e) => handleSelectTestKey(e.target.value)}
+                className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-zinc-900 text-slate-700 dark:text-slate-300"
+              >
+                <option value="">Select from EMV Test Keys...</option>
+                <option value="none">— Clear Selection —</option>
+                <optgroup label="MasterCard MTIP Test">
+                  <option value="0-auth">Auth Key (9E152043...)</option>
+                  <option value="0-mac">MAC Key (4664942F...)</option>
+                  <option value="0-data">Data Key (CE293B8C...)</option>
+                </optgroup>
+                <optgroup label="VISA ADVT Test">
+                  <option value="1-auth">Auth Key (2315208C...)</option>
+                  <option value="1-mac">MAC Key (2315208C...)</option>
+                  <option value="1-data">Data Key (2315208C...)</option>
+                </optgroup>
+              </select>
+            </div>
           </div>
 
           {/* PVK Index Input */}
