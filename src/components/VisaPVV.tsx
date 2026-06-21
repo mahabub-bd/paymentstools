@@ -77,23 +77,33 @@ const VisaPVV = ({ className = '' }: { className?: string }) => {
       if (!/^[0-9A-F]+$/.test(cleanPvk)) {
         throw new Error('PVK must contain only hex characters (0-9, A-F)');
       }
-      if (!cleanPvkIndex || cleanPvkIndex.length !== 6) {
-        throw new Error('PVK Index must be 6 hex characters');
+      // Accept either 1 hex digit (PVKI) or 6 hex characters (full PVK index)
+      if (!cleanPvkIndex || (cleanPvkIndex.length !== 1 && cleanPvkIndex.length !== 6)) {
+        throw new Error('PVK Index must be 1 or 6 hex characters');
       }
       if (!/^[0-9A-F]+$/.test(cleanPvkIndex)) {
         throw new Error('PVK Index must contain only hex characters (0-9, A-F)');
       }
+      // Normalize to 6 characters internally (pad with leading zeros if needed)
+      const normalizedPvkIndex = cleanPvkIndex.length === 1 ? '00000' + cleanPvkIndex : cleanPvkIndex;
 
       // Step 1: Build Transformed Security Parameter (TSP)
-      // Format: PVKI (2 hex digits from last 2 of index) + PIN length (2 digits) + PIN + 11 rightmost PAN digits (no check digit)
-      const pvki = cleanPvkIndex.substring(4); // Last 2 digits of PVK index
-      const pinLenStr = cleanPin.length.toString().padStart(2, '0'); // 2 digits
+      // Format: PAN|11 (11 rightmost digits excluding check digit) + PVKI (1 hex digit) + PIN
+      // For PANs with 18+ digits, exclude the leftmost 2 digits to get the "middle" 11
       const panWithoutCheck = cleanPan.slice(0, -1); // Remove check digit
-      const panRight11 = panWithoutCheck.slice(-11).padStart(11, '0'); // Rightmost 11 digits
+      let panRight11: string;
+      if (panWithoutCheck.length > 16) {
+        // For longer PANs, exclude leftmost 2 digits, then take rightmost 11 of remaining
+        const panWithoutLeftmost2 = panWithoutCheck.slice(2); // Skip first 2 digits
+        panRight11 = panWithoutLeftmost2.slice(-11).padStart(11, '0');
+      } else {
+        panRight11 = panWithoutCheck.slice(-11).padStart(11, '0'); // Rightmost 11 digits
+      }
+      const pvki = normalizedPvkIndex.slice(-1); // Last 1 digit of PVK index (1 nibble)
 
-      // Build TSP (64 bits / 16 nibbles)
-      const tspData = pvki + pinLenStr + cleanPin + panRight11;
-      const tspHex = tspData.padEnd(16, 'F').substring(0, 16); // 16 nibbles, pad with F
+      // Build TSP (64 bits / 16 nibbles) = PAN|11 + PVKI + PIN
+      const tspData = panRight11 + pvki + cleanPin;
+      const tspHex = tspData.padEnd(16, 'F').substring(0, 16); // 16 nibbles, pad with F if needed
 
       // Step 2: Encrypt TSP with PVK using Triple DES (2-key) in ECB mode
       const tspDataForEncrypt = CryptoJS.enc.Hex.parse(tspHex);
@@ -127,7 +137,7 @@ const VisaPVV = ({ className = '' }: { className?: string }) => {
         pin: '•'.repeat(cleanPin.length),
         pinLength: cleanPin.length,
         pvk: cleanPvk,
-        pvkIndex: cleanPvkIndex,
+        pvkIndex: normalizedPvkIndex,
         tsp: tspHex,
         encryptedResult,
         decimalized,
