@@ -260,7 +260,7 @@ const Dashboard = () => {
                 <Route path="/tlv" element={<EmvTlvParser />} />
                 <Route path="/tlvbuilder" element={<EmvTlvBuilder />} />
                 <Route path="/tlvcomparator" element={<EmvTlvComparator />} />
-                <Route path="/cavv" element={<CavvDecoder />} />
+                                <Route path="/cavv" element={<CavvDecoder />} />
                 <Route path="/emvtags" element={<EmvNfcTags />} />
                 <Route path="/emvrid" element={<EmvRIDReference />} />
                 <Route path="/emvcryptogram" element={<EmvCryptogramCalculator />} />

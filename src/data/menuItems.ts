@@ -22,7 +22,7 @@ export const menuItems: MenuItem[] = [
   { id: 'tlv', label: 'TLV Parser', icon: '📋', category: 'emv', description: 'Parse EMV TLV data', shortcut: '6' },
   { id: 'tlvbuilder', label: 'TLV Builder', icon: '🔧', category: 'emv', description: 'Build EMV TLV data structures', shortcut: 'b' },
   { id: 'tlvcomparator', label: 'TLV Comparator', icon: '🔍', category: 'emv', description: 'Compare two EMV TLV messages', shortcut: 'o' },
-  { id: 'emvtags', label: 'EMV & NFC Tags', icon: '🏷️', category: 'emv', description: 'Complete EMV & NFC tag reference', shortcut: '7' },
+    { id: 'emvtags', label: 'EMV & NFC Tags', icon: '🏷️', category: 'emv', description: 'Complete EMV & NFC tag reference', shortcut: '7' },
   { id: 'emvrid', label: 'RID Reference', icon: '📇', category: 'emv', description: 'Registered Application Provider IDs', shortcut: 'r' },
   { id: 'emvcryptogram', label: 'Cryptogram Calc', icon: '🔐', category: 'emv', description: 'Calculate ARQC/ARPC for EMV', shortcut: 'a' },
   { id: 'tvr', label: 'TVR', icon: '🧾', category: 'emv', description: 'Tag 95 decoder', shortcut: 'v' },

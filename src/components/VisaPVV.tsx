@@ -117,12 +117,12 @@ const VisaPVV = ({ className = '' }: { className?: string }) => {
       const encryptedResult = encrypted.ciphertext.toString(CryptoJS.enc.Hex).toUpperCase();
 
       // Step 3: Decimalize the encrypted result
-      // Decimalization table: 0-9 map to 0-9, A-F map to 0-5
+      // Decimalization table (BP tool method): 0-9 map to 0-9, A-F all map to 0
       const decimalize = (hex: string): string => {
         const table: Record<string, string> = {
           '0': '0', '1': '1', '2': '2', '3': '3', '4': '4',
           '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
-          'A': '0', 'B': '1', 'C': '2', 'D': '3', 'E': '4', 'F': '5'
+          'A': '0', 'B': '0', 'C': '0', 'D': '0', 'E': '0', 'F': '0'
         };
         return hex.split('').map(c => table[c] || '0').join('');
       };
@@ -397,14 +397,14 @@ const VisaPVV = ({ className = '' }: { className?: string }) => {
               <p className="text-cyan-400 font-semibold mb-1">Step 2: Encrypt TSP with PVK (Triple DES ECB)</p>
               <div className="font-mono text-slate-400 space-y-1">
                 <div>TSP: <span className="text-white">{result.tsp}</span></div>
-                <div>PVK: <span className="text-white">{result.pvk.substring(0, 16)}...</span></div>
+                <div>PVK: <span className="text-white">{result.pvk}</span></div>
                 <div className="text-green-500 font-bold">Result: {result.encryptedResult}</div>
               </div>
             </div>
 
             {/* Step 3: Decimalize */}
             <div>
-              <p className="text-cyan-400 font-semibold mb-1">Step 3: Decimalize (A-F → 0-5)</p>
+              <p className="text-cyan-400 font-semibold mb-1">Step 3: Decimalize (A-F → 0)</p>
               <div className="font-mono text-slate-400 space-y-1">
                 <div>Encrypted: <span className="text-white">{result.encryptedResult}</span></div>
                 <div className="text-green-400">Decimalized: {result.decimalized}</div>
