@@ -28,6 +28,7 @@ const Iso8583MacCalculator = lazy(() => import('./Iso8583MacCalculator'));
 const PinBlockCalculator = lazy(() => import('./PinBlockCalculator'));
 const PinFromPinBlock = lazy(() => import('./PinFromPinBlock'));
 const PosEntryModeDecoder = lazy(() => import('./PosEntryModeDecoder'));
+const PosConditionCodeDecoder = lazy(() => import('./PosConditionCodeDecoder'));
 const ServiceCodeList = lazy(() => import('./ServiceCodeList'));
 const VisaPVV = lazy(() => import('./VisaPVV'));
 const CvvCalculator = lazy(() => import('./CvvCalculator'));
@@ -281,6 +282,7 @@ const Dashboard = () => {
                 <Route path="/mcclist" element={<MccList />} />
                 <Route path="/aidlist" element={<AidList />} />
                 <Route path="/posentry" element={<PosEntryModeDecoder />} />
+                <Route path="/poscondition" element={<PosConditionCodeDecoder />} />
                 <Route path="/paymentkeys" element={<PaymentKeysReference />} />
                 <Route path="/emvtestkeys" element={<IssuerEmvTestKeys />} />
                 <Route path="/knowledgebase" element={<KnowledgeBase />} />

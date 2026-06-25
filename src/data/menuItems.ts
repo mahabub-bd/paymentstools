@@ -16,6 +16,7 @@ export const menuItems: MenuItem[] = [
   { id: 'mtireference', label: 'MTI Reference', icon: '📋', category: 'iso8583', description: 'Message Type Identifier codes', shortcut: '3' },
   { id: 'thaleshsm', label: 'Thales HSM', icon: '🔒', category: 'iso8583', description: 'Thales HSM Commands Reference', shortcut: '4' },
   { id: 'posentry', label: 'POS Entry Mode', icon: '🖥️', category: 'iso8583', description: 'Decode Field 22 - POS Entry Mode', shortcut: '5' },
+  { id: 'poscondition', label: 'POS Condition', icon: '📍', category: 'iso8583', description: 'Decode Field 25 - POS Condition Code', shortcut: 'p' },
   { id: 'maccalculator', label: 'MAC Calculator', icon: '🔐', category: 'iso8583', description: 'Calculate ISO 8583 MAC', shortcut: 'm' },
 
   // EMV Tools - TLV tools together
