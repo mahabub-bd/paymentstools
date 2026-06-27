@@ -27,9 +27,11 @@ Payment Tools is an open-source web application designed for payment card indust
 - MAC Calculator for ISO 8583 messages
 - Thales HSM Commands reference
 - POS Entry Mode decoder (Field 22)
+- POS Condition Code decoder (Field 25)
 
 ### EMV Tools
 - TLV (Tag-Length-Value) Parser
+- APDU Transaction Parser - Parse EMV APDU logs, transaction flow, AFL, and cryptogram outcome
 - TLV Builder - Construct EMV TLV data structures
 - TLV Comparator - Compare two EMV TLV messages
 - CAVV Decoder - Decode Cardholder Authentication Verification Value
@@ -42,6 +44,7 @@ Payment Tools is an open-source web application designed for payment card indust
 - IAD Decoder (Tag 9F10)
 - CVR Decoder
 - Terminal Capabilities Decoder (Tag 9F33)
+- TSI Decoder (Tag 9B)
 
 ### PIN Tools
 - PIN Block Calculator (Format 0)
@@ -54,6 +57,7 @@ Payment Tools is an open-source web application designed for payment card indust
 - MCC (Merchant Category Codes) list
 - AID (Application Identifier) list
 - Payment Keys reference (TMK, TPK, TAK, ZMK, ZPK, ZAK, LMK)
+- Issuer EMV Test Keys reference
 - Knowledge Base with articles & guides
 
 ### Utilities
@@ -102,7 +106,7 @@ npm run preview
 
 ## Available Tools
 
-### ISO 8583 Tools (6 tools)
+### ISO 8583 Tools (7 tools)
 
 | Tool | Shortcut | Description |
 |------|----------|-------------|
@@ -112,12 +116,14 @@ npm run preview
 | **MAC Calculator** | `M` | Calculate ISO 8583 MAC hashes |
 | **Thales HSM** | `4` | Thales HSM Commands Reference |
 | **POS Entry Mode** | `5` | Decode Field 22 - POS Entry Mode codes |
+| **POS Condition** | `P` | Decode Field 25 - POS Condition Code |
 
-### EMV Tools (13 tools)
+### EMV Tools (15 tools)
 
 | Tool | Shortcut | Description |
 |------|----------|-------------|
 | **TLV Parser** | `6` | Parse EMV TLV data with tag descriptions |
+| **APDU Parser** | `N` | Parse EMV APDU transaction logs, SELECT/GPO/READ RECORD/GENERATE AC flow, and final TC/AAC result |
 | **TLV Builder** | `B` | Build and construct EMV TLV data structures |
 | **TLV Comparator** | `O` | Compare two EMV TLV messages |
 | **CAVV Decoder** | `Z` | Decode Cardholder Authentication Verification Value |
@@ -130,6 +136,7 @@ npm run preview
 | **IAD** | `D` | Issuer Application Data (Tag 9F10) decoder |
 | **CVR** | `X` | Card Verification Results decoder |
 | **Terminal Capabilities** | `Q` | Terminal Capabilities (Tag 9F33) decoder |
+| **TSI Decoder** | `S` | Transaction Status Information (Tag 9B) decoder |
 
 ### PIN Tools (4 tools)
 
@@ -140,7 +147,7 @@ npm run preview
 | **Visa PVV** | `0` | Calculate Visa PIN Verification Value |
 | **CVV Calculator** | `C` | Calculate CVV/CVC values |
 
-### Reference (5 tools)
+### Reference (6 tools)
 
 | Tool | Shortcut | Description |
 |------|----------|-------------|
@@ -148,6 +155,7 @@ npm run preview
 | **MCC List** | `E` | Merchant Category Codes lookup |
 | **AID List** | `I` | EMV Application Identifiers |
 | **Payment Keys** | `K` | TMK, TPK, TAK, ZMK, ZPK, ZAK, LMK reference |
+| **EMV Test Keys** | `J` | Issuer EMV test keys for Mastercard and Visa testing |
 | **Knowledge Base** | `L` | Payment system articles & guides |
 
 ### Utilities (3 tools)
@@ -192,12 +200,16 @@ npm run preview
 | `F` | Track Generator |
 | `G` | Card Generator |
 | `I` | AID List |
+| `J` | EMV Test Keys |
 | `K` | Payment Keys |
 | `L` | Knowledge Base |
 | `M` | MAC Calculator |
+| `N` | APDU Parser |
 | `O` | TLV Comparator |
+| `P` | POS Condition |
 | `Q` | Terminal Capabilities |
 | `R` | RID Reference |
+| `S` | TSI Decoder |
 | `T` | Converters |
 | `U` | AIP Decoder |
 | `V` | TVR Decoder |

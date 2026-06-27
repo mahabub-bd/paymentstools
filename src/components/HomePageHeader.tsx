@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
+import { BrandLogo } from './BrandLogo';
 
 interface HomePageHeaderProps {
   loaded: boolean;
@@ -43,12 +44,8 @@ export const HomePageHeader = ({ loaded }: HomePageHeaderProps) => {
           <div className="flex items-center justify-between gap-3">
             {/* Logo & Brand */}
             <Link to="/" className="flex items-center gap-2 group">
-              <div className="relative w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-md shadow-blue-600/20 group-hover:shadow-lg group-hover:shadow-blue-600/30 transition-all duration-300 group-hover:scale-105">
-                <span className="text-white text-xs font-bold">PT</span>
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-sm font-bold text-slate-900 dark:text-white">Payment Tools</h1>
+              <div className="flex h-11 items-center transition-transform duration-300 group-hover:scale-[1.02]">
+                <BrandLogo className="h-10 w-auto max-w-[190px]" />
               </div>
             </Link>
 

@@ -12,6 +12,7 @@ import { LoadingScreen } from './LoadingScreen';
 
 const CardGenerator = lazy(() => import('./CardGenerator'));
 const ConverterTools = lazy(() => import('./ConverterTools'));
+const ApduTransactionParser = lazy(() => import('./ApduTransactionParser'));
 const EmvTlvParser = lazy(() => import('./EmvTlvParser'));
 const EmvTlvBuilder = lazy(() => import('./EmvTlvBuilder'));
 const EmvTlvComparator = lazy(() => import('./EmvTlvComparator'));
@@ -40,6 +41,7 @@ const AipDecoder = lazy(() => import('./AipDecoder'));
 const IadDecoder = lazy(() => import('./IadDecoder'));
 const CvrDecoder = lazy(() => import('./CvrDecoder'));
 const TerminalCapabilitiesDecoder = lazy(() => import('./TerminalCapabilitiesDecoder'));
+const TsiDecoder = lazy(() => import('./TsiDecoder'));
 const KnowledgeBase = lazy(() => import('./KnowledgeBase'));
 const IssuerEmvTestKeys = lazy(() => import('./IssuerEmvTestKeys'));
 const AidList = lazy(() => import('./AidList'));
@@ -259,6 +261,7 @@ const Dashboard = () => {
                 <Route path="/maccalculator" element={<Iso8583MacCalculator />} />
                 <Route path="/thaleshsm" element={<ThalesHsmCommands />} />
                 <Route path="/tlv" element={<EmvTlvParser />} />
+                <Route path="/apduparser" element={<ApduTransactionParser />} />
                 <Route path="/tlvbuilder" element={<EmvTlvBuilder />} />
                 <Route path="/tlvcomparator" element={<EmvTlvComparator />} />
                                 <Route path="/cavv" element={<CavvDecoder />} />
@@ -271,6 +274,7 @@ const Dashboard = () => {
                 <Route path="/iad" element={<IadDecoder />} />
                 <Route path="/cvr" element={<CvrDecoder />} />
                 <Route path="/terminalcaps" element={<TerminalCapabilitiesDecoder />} />
+                <Route path="/tsi" element={<TsiDecoder />} />
                 <Route path="/pinblock" element={<PinBlockCalculator />} />
                 <Route path="/pinfromblock" element={<PinFromPinBlock />} />
                 <Route path="/visapvv" element={<VisaPVV />} />

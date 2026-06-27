@@ -21,9 +21,10 @@ export const menuItems: MenuItem[] = [
 
   // EMV Tools - TLV tools together
   { id: 'tlv', label: 'TLV Parser', icon: '📋', category: 'emv', description: 'Parse EMV TLV data', shortcut: '6' },
+  { id: 'apduparser', label: 'APDU Parser', icon: '💬', category: 'emv', description: 'Parse EMV APDU transaction logs', shortcut: 'n' },
   { id: 'tlvbuilder', label: 'TLV Builder', icon: '🔧', category: 'emv', description: 'Build EMV TLV data structures', shortcut: 'b' },
   { id: 'tlvcomparator', label: 'TLV Comparator', icon: '🔍', category: 'emv', description: 'Compare two EMV TLV messages', shortcut: 'o' },
-    { id: 'emvtags', label: 'EMV & NFC Tags', icon: '🏷️', category: 'emv', description: 'Complete EMV & NFC tag reference', shortcut: '7' },
+  { id: 'emvtags', label: 'EMV & NFC Tags', icon: '🏷️', category: 'emv', description: 'Complete EMV & NFC tag reference', shortcut: '7' },
   { id: 'emvrid', label: 'RID Reference', icon: '📇', category: 'emv', description: 'Registered Application Provider IDs', shortcut: 'r' },
   { id: 'emvcryptogram', label: 'Cryptogram Calc', icon: '🔐', category: 'emv', description: 'Calculate ARQC/ARPC for EMV', shortcut: 'a' },
   { id: 'tvr', label: 'TVR', icon: '🧾', category: 'emv', description: 'Tag 95 decoder', shortcut: 'v' },
@@ -31,8 +32,9 @@ export const menuItems: MenuItem[] = [
   { id: 'aip', label: 'AIP', icon: '🧩', category: 'emv', description: 'Tag 82 decoder', shortcut: 'u' },
   { id: 'iad', label: 'IAD', icon: '🧬', category: 'emv', description: 'Tag 9F10 decoder', shortcut: 'd' },
   { id: 'cvr', label: 'CVR', icon: '✓', category: 'emv', description: 'Card Verification Results decoder', shortcut: 'x' },
-  { id: 'terminalcaps', label: 'Terminal Capabilities', icon: '🖲️', category: 'emv', description: 'Tag 9F33 - Terminal Capabilities Decoder', shortcut: 'q' },
+  { id: 'terminalcaps', label: 'Terminal Capabilities', icon: '🖲️', category: 'emv', description: 'Tag 9F33 - Terminal Capabilities', shortcut: 'q' },
   { id: 'cavv', label: 'CAVV Decoder', icon: '🔐', category: 'emv', description: 'Decode Cardholder Authentication Verification Value', shortcut: 'z' },
+  { id: 'tsi', label: 'TSI Decoder', icon: '📊', category: 'emv', description: 'Tag 9B - Transaction Status Information', shortcut: 's' },
 
   // PIN Tools
   { id: 'visapvv', label: 'Visa PVV', icon: '💳', category: 'pin', description: 'Visa PIN Verification Value', shortcut: '0' },
@@ -45,7 +47,7 @@ export const menuItems: MenuItem[] = [
   { id: 'mcclist', label: 'MCC List', icon: '🏪', category: 'reference', description: 'Merchant Category Codes', shortcut: 'e' },
   { id: 'aidlist', label: 'AID List', icon: '📋', category: 'reference', description: 'EMV Application Identifiers', shortcut: 'i' },
   { id: 'paymentkeys', label: 'Payment Keys', icon: '🔑', category: 'reference', description: 'TMK, TPK, TAK, ZMK, ZPK, ZAK, LMK', shortcut: 'k' },
-  { id: 'emvtestkeys', label: 'EMV Test Keys', icon: '🔐', category: 'reference', description: 'Issuer EMV test keys (MasterCard & VISA)', shortcut: 'j' },
+  { id: 'emvtestkeys', label: 'EMV Test Keys', icon: '🔐', category: 'reference', description: 'Issuer EMV test keys', shortcut: 'j' },
   { id: 'knowledgebase', label: 'Knowledge Base', icon: '📚', category: 'reference', description: 'Payment system articles & guides', shortcut: 'l' },
 
   // Utilities

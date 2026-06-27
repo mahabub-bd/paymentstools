@@ -130,7 +130,7 @@ const TerminalCapabilitiesDecoder = ({ className = '' }: TerminalCapabilitiesDec
   return (
     <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-4 ${className}`}>
       <div className="mb-4">
-        <h1 className="text-xl font-bold text-slate-800 dark:text-white mb-1">Tag 9F33 - Terminal Capabilities Decoder</h1>
+        <h1 className="text-xl font-bold text-slate-800 dark:text-white mb-1">Tag 9F33 - Terminal Capabilities</h1>
         <p className="text-slate-600 dark:text-slate-400 text-xs">Decode terminal card input, CVM, and security capability bits.</p>
       </div>
 
@@ -149,9 +149,8 @@ const TerminalCapabilitiesDecoder = ({ className = '' }: TerminalCapabilitiesDec
               placeholder="E0F8C8 or 9F33 03 E0F8C8"
               className="w-full pl-3 pr-14 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
             />
-            <span className={`absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[11px] font-mono ${
-              isComplete ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400'
-            }`}>
+            <span className={`absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[11px] font-mono ${isComplete ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400'
+              }`}>
               {cleanedValue.length}/6
             </span>
           </div>
@@ -237,9 +236,8 @@ const TerminalCapabilitiesDecoder = ({ className = '' }: TerminalCapabilitiesDec
                       const active = decoded.bits.find(decodedBit => decodedBit.byte === bit.byte && decodedBit.bit === bit.bit)?.active;
                       return (
                         <div key={`${bit.byte}-${bit.bit}`} className={`px-3 py-2 flex items-center gap-2 ${active ? 'bg-emerald-50 dark:bg-emerald-950/20' : 'hover:bg-slate-50 dark:hover:bg-zinc-900/50'}`}>
-                          <span className={`w-7 h-7 rounded flex items-center justify-center text-xs font-mono font-bold border ${
-                            active ? 'bg-emerald-100 dark:bg-emerald-900/40 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300' : 'bg-white dark:bg-black border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500'
-                          }`}>
+                          <span className={`w-7 h-7 rounded flex items-center justify-center text-xs font-mono font-bold border ${active ? 'bg-emerald-100 dark:bg-emerald-900/40 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300' : 'bg-white dark:bg-black border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500'
+                            }`}>
                             {active ? '1' : '0'}
                           </span>
                           <div className="flex-1 min-w-0">

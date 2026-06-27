@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
+import { BrandLogo } from './BrandLogo';
 
 interface MenuItem {
   id: string;
@@ -157,19 +158,16 @@ export const AppSidebar = ({
         >
           {isOpen ? (
             <>
-              <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
-                <span className="text-white text-sm font-bold">PT</span>
+              <div className="flex h-12 min-w-0 items-center">
+                <BrandLogo className="h-11 w-auto max-w-[190px]" />
               </div>
-              <div>
-                <h1 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
-                  Payment Tools
-                </h1>
+              <div className="min-w-0">
                 <p className="text-[11px] text-slate-500 dark:text-zinc-500">{totalVisibleTools} tools available</p>
               </div>
             </>
           ) : (
-            <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
-              <span className="text-white text-sm font-bold">PT</span>
+            <div className="flex h-11 w-11 items-center justify-center">
+              <BrandLogo className="h-10 w-10" />
             </div>
           )}
         </Link>

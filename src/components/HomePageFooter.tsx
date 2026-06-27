@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { BrandLogo } from './BrandLogo';
 
 interface HomePageFooterProps {
   loaded: boolean;
@@ -71,10 +72,7 @@ export const HomePageFooter = ({ loaded }: HomePageFooterProps) => {
           >
             {/* Logo & Brand */}
             <motion.div variants={itemVariants} className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-                <span className="text-white text-xs font-bold">PT</span>
-              </div>
-              <span className="font-medium text-slate-900 dark:text-white text-sm">Payment Tools</span>
+              <BrandLogo className="h-9 w-auto max-w-[170px]" />
             </motion.div>
 
             {/* Right side links */}

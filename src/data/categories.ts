@@ -15,11 +15,11 @@ export const categories: Category[] = [
 
 // For HomePage - Tailwind gradient classes
 export const categoryColors: Record<string, string> = {
-  blue: 'from-blue-500 to-blue-600',
-  green: 'from-emerald-500 to-emerald-600',
-  purple: 'from-violet-500 to-violet-600',
-  amber: 'from-amber-500 to-amber-600',
-  slate: 'from-slate-500 to-slate-600',
+  blue: 'from-[#00f0ff] to-blue-500',
+  green: 'from-[#00f0ff] to-blue-500',
+  purple: 'from-[#00f0ff] to-blue-500',
+  amber: 'from-[#00f0ff] to-blue-500',
+  slate: 'from-[#00f0ff] to-blue-500',
 };
 
 // For Dashboard - solid color classes
