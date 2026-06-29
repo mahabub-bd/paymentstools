@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { getEMVTagDefinition, hexToAscii, parseEMVTLV, type TLVData } from '../utils/iso8583VersionParser/emv-tlv';
 
 type ParsedApduCommand = {
@@ -443,23 +443,35 @@ interface ApduTransactionParserProps {
 
 const ApduTransactionParser = ({ className = '' }: ApduTransactionParserProps) => {
   const [input, setInput] = useState('');
+  const [parsedData, setParsedData] = useState<{ events: ApduEvent[]; summary: Summary; flowSteps: { main: FlowStep[]; branches: FlowStep[]; aidAttempts: FlowStep[] } } | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const events = useMemo(() => parseApduLog(input), [input]);
-  const summary = useMemo(() => buildSummary(events), [events]);
-  const flowSteps = useMemo(() => buildFlowSteps(events, summary), [events, summary]);
-  const selectedEvent = events.find(event => event.id === selectedEventId) || events.find(event => event.tlvRows.length > 0) || events[0];
+  const selectedEvent = parsedData?.events.find(event => event.id === selectedEventId) || parsedData?.events.find(event => event.tlvRows.length > 0) || parsedData?.events[0];
   const selectedAfl = selectedEvent ? getTlvValue(selectedEvent.tlvRows, '94') : undefined;
   const aflRows = parseAfl(selectedAfl);
 
+  const handleSubmit = useCallback(() => {
+    const events = parseApduLog(input);
+    const summary = buildSummary(events);
+    const flowSteps = buildFlowSteps(events, summary);
+    setParsedData({ events, summary, flowSteps });
+    setSelectedEventId(null);
+  }, [input]);
+
   const handleLoadSample = useCallback(() => {
     setInput(SAMPLE_LOG);
+    setParsedData(null);
     setSelectedEventId(null);
   }, []);
 
   const handleClear = useCallback(() => {
     setInput('');
+    setParsedData(null);
     setSelectedEventId(null);
   }, []);
+
+  const summary = parsedData?.summary;
+  const events = parsedData?.events || [];
+  const flowSteps = parsedData?.flowSteps;
 
   return (
     <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-4 ${className}`}>
@@ -484,50 +496,65 @@ const ApduTransactionParser = ({ className = '' }: ApduTransactionParserProps) =
             className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-xs bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500"
           />
           <div className="mt-2 flex flex-wrap gap-2">
-            <button onClick={handleLoadSample} className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium">Load Example</button>
+            <button onClick={handleSubmit} className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium">Parse APDU</button>
+            <button onClick={handleLoadSample} className="px-3 py-2 bg-white dark:bg-zinc-900 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-zinc-700 rounded-md hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors text-sm">Load Example</button>
             <button onClick={handleClear} className="px-3 py-2 bg-white dark:bg-zinc-900 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-zinc-700 rounded-md hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors text-sm">Clear</button>
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 p-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">Transaction Summary</p>
-          <div className="mt-3 space-y-2 text-sm">
-            <div className="flex justify-between gap-3"><span className="text-slate-500 dark:text-zinc-400">Events</span><span className="font-semibold text-slate-900 dark:text-white">{summary.totalEvents}</span></div>
-            <div className="flex justify-between gap-3"><span className="text-slate-500 dark:text-zinc-400">Selected App</span><span className="font-semibold text-slate-900 dark:text-white text-right">{summary.selectedScheme || 'None'}</span></div>
-            <div className="flex justify-between gap-3"><span className="text-slate-500 dark:text-zinc-400">AID</span><span className="font-mono text-xs text-slate-900 dark:text-white text-right">{summary.selectedAid || '-'}</span></div>
-            <div className="flex justify-between gap-3"><span className="text-slate-500 dark:text-zinc-400">GPO</span><span className={summary.gpoOk ? 'text-emerald-600 dark:text-emerald-300 font-semibold' : 'text-slate-500 dark:text-zinc-400'}>{summary.gpoOk ? 'Success' : 'Not found'}</span></div>
-            <div className="flex justify-between gap-3"><span className="text-slate-500 dark:text-zinc-400">Records Read</span><span className="font-semibold text-slate-900 dark:text-white">{summary.readRecords}</span></div>
-            <div className="pt-2 border-t border-slate-200 dark:border-zinc-800">
-              <p className="text-[11px] text-slate-500 dark:text-zinc-500">First GENERATE AC</p>
-              <p className="font-semibold text-slate-900 dark:text-white">{summary.firstCryptogram || '-'}</p>
-            </div>
-            <div>
-              <p className="text-[11px] text-slate-500 dark:text-zinc-500">Final Result</p>
-              <p className={`font-bold ${summary.finalResult === 'Declined' ? 'text-red-600 dark:text-red-300' : summary.finalResult === 'Approved' ? 'text-emerald-600 dark:text-emerald-300' : 'text-amber-600 dark:text-amber-300'}`}>{summary.finalResult}</p>
+        {summary && (
+          <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 p-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">Transaction Summary</p>
+            <div className="mt-3 space-y-2 text-sm">
+              <div className="flex justify-between gap-3"><span className="text-slate-500 dark:text-zinc-400">Events</span><span className="font-semibold text-slate-900 dark:text-white">{summary.totalEvents}</span></div>
+              <div className="flex justify-between gap-3"><span className="text-slate-500 dark:text-zinc-400">Selected App</span><span className="font-semibold text-slate-900 dark:text-white text-right">{summary.selectedScheme || 'None'}</span></div>
+              <div className="flex justify-between gap-3"><span className="text-slate-500 dark:text-zinc-400">AID</span><span className="font-mono text-xs text-slate-900 dark:text-white text-right">{summary.selectedAid || '-'}</span></div>
+              <div className="flex justify-between gap-3"><span className="text-slate-500 dark:text-zinc-400">GPO</span><span className={summary.gpoOk ? 'text-emerald-600 dark:text-emerald-300 font-semibold' : 'text-slate-500 dark:text-zinc-400'}>{summary.gpoOk ? 'Success' : 'Not found'}</span></div>
+              <div className="flex justify-between gap-3"><span className="text-slate-500 dark:text-zinc-400">Records Read</span><span className="font-semibold text-slate-900 dark:text-white">{summary.readRecords}</span></div>
+              <div className="pt-2 border-t border-slate-200 dark:border-zinc-800">
+                <p className="text-[11px] text-slate-500 dark:text-zinc-500">First GENERATE AC</p>
+                <p className="font-semibold text-slate-900 dark:text-white">{summary.firstCryptogram || '-'}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-slate-500 dark:text-zinc-500">Final Result</p>
+                <p className={`font-bold ${summary.finalResult === 'Declined' ? 'text-red-600 dark:text-red-300' : summary.finalResult === 'Approved' ? 'text-emerald-600 dark:text-emerald-300' : 'text-amber-600 dark:text-amber-300'}`}>{summary.finalResult}</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {events.length === 0 && input.trim() && (
+      {!parsedData && input.trim() && (
+        <div className="mb-4 p-3 rounded-md border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-300 text-xs">
+          Click "Parse APDU" to decode the transaction log.
+        </div>
+      )}
+
+      {!parsedData && input.trim() === '' && (
+        <div className="mb-4 p-3 rounded-md border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-600 dark:text-slate-400 text-xs">
+          Paste APDU transaction log above and click "Parse APDU" to see results.
+        </div>
+      )}
+
+      {parsedData && events.length === 0 && (
         <div className="mb-4 p-3 rounded-md border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-xs">
           No APDU events found. The parser expects log lines with Start, DATA SENT TO THE CARD, and DATA RECEIVED FROM THE CARD markers.
         </div>
       )}
 
-      {events.length > 0 && (
+      {parsedData && events.length > 0 && (
         <div className="space-y-4">
           <div className="border border-slate-200 dark:border-zinc-800 rounded-lg overflow-hidden">
             <div className="px-3 py-2 bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-sm font-semibold text-slate-800 dark:text-white">EMV ATM Transaction Flow</h3>
-              <span className={`px-2 py-1 rounded text-xs font-bold ${summary.finalResult === 'Declined' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' : summary.finalResult === 'Approved' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'}`}>
-                {summary.finalResult}
+              <span className={`px-2 py-1 rounded text-xs font-bold ${summary?.finalResult === 'Declined' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' : summary?.finalResult === 'Approved' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'}`}>
+                {summary?.finalResult}
               </span>
             </div>
 
             <div className="p-2.5 sm:p-3">
               <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-2">
-                {flowSteps.main.map((step, index) => (
+                {flowSteps?.main.map((step, index: number) => (
                   <div key={step.id} className={`min-h-[58px] rounded-md border px-2.5 py-2 ${getFlowStepClasses(step.status)}`}>
                     <div className="flex items-start gap-2">
                       <span className="mt-0.5 shrink-0 rounded bg-white/70 dark:bg-black/30 px-1.5 py-0.5 font-mono text-[10px]">
@@ -542,7 +569,7 @@ const ApduTransactionParser = ({ className = '' }: ApduTransactionParserProps) =
                 ))}
               </div>
 
-              {flowSteps.aidAttempts.length > 0 && (
+              {flowSteps?.aidAttempts && flowSteps.aidAttempts.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5 rounded-md border border-slate-200 bg-slate-50 p-2 dark:border-zinc-800 dark:bg-zinc-900/70">
                   <span className="mr-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-zinc-500">AID</span>
                   {flowSteps.aidAttempts.map(step => (
@@ -554,7 +581,7 @@ const ApduTransactionParser = ({ className = '' }: ApduTransactionParserProps) =
               )}
 
               <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
-                {flowSteps.branches.map(step => (
+                {flowSteps?.branches.map(step => (
                   <div key={step.id} className={`rounded-md border px-2.5 py-2 ${getFlowStepClasses(step.status)}`}>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="min-w-0">
@@ -582,7 +609,7 @@ const ApduTransactionParser = ({ className = '' }: ApduTransactionParserProps) =
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-zinc-800">
-                  {events.map(event => (
+                  {events.map((event: ApduEvent) => (
                     <tr
                       key={event.id}
                       onClick={() => setSelectedEventId(event.id)}

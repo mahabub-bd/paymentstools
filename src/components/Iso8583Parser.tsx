@@ -380,7 +380,10 @@ const Iso8583Parser = ({ className = '' }) => {
   };
 
   const handleLoadExample = useCallback(() => {
-    setInput('02003220000000000000000000000000000000000123456789012345673001010A5DF3F8E698765432109876543211234567890123456');
+    // ISO 8583 Authorization Advice Response with DE 60 LLLVAR example
+    // Contains: MTI 1022, DE 3,4,7,11-13,39,41,60 with "000022" data
+    // Message: 0000000000081022380000028000109300000628140758001502140757062830304954434C504F5339000630303030303232
+    setInput('0000000000081022380000028000109300000628140758001502140757062830304954434C504F5339000630303030303232');
     setInputFormat('hex');
   }, []);
 
@@ -389,6 +392,166 @@ const Iso8583Parser = ({ className = '' }) => {
     setParsedResult(null);
     setShowRaw(false);
   }, []);
+
+  const handleDownload = useCallback(() => {
+    if (!parsedResult || parsedResult.error) return;
+
+    // Create a formatted text report
+    let report = 'ISO 8583 MESSAGE PARSER REPORT\n';
+    report += '=' .repeat(50) + '\n\n';
+
+    // MTI Section
+    if (parsedResult.mti) {
+      report += 'MESSAGE TYPE INDICATOR (MTI)\n';
+      report += '-'.repeat(30) + '\n';
+      report += `Value: ${parsedResult.mti}\n`;
+      report += `Description: ${parsedResult.fields[0]?.description || 'Unknown'}\n\n`;
+    }
+
+    // Bitmap Section
+    if (parsedResult.primaryBitmap) {
+      report += 'BITMAP\n';
+      report += '-'.repeat(30) + '\n';
+      report += `Primary: ${parsedResult.primaryBitmap.match(/.{1,2}/g)?.join(' ') || parsedResult.primaryBitmap}\n`;
+      if (parsedResult.secondaryBitmap) {
+        report += `Secondary: ${parsedResult.secondaryBitmap.match(/.{1,2}/g)?.join(' ') || parsedResult.secondaryBitmap}\n`;
+      }
+      report += `Present Fields: ${parsedResult.presentFields.filter((f: number) => f !== 1).join(', ')}\n\n`;
+    }
+
+    // Data Fields Section
+    if (parsedResult.fields && Object.keys(parsedResult.fields).length > 1) {
+      report += 'DATA FIELDS\n';
+      report += '-'.repeat(30) + '\n';
+      Object.entries(parsedResult.fields)
+        .filter(([key]) => key !== '0')
+        .sort(([a], [b]) => parseInt(a) - parseInt(b))
+        .forEach(([fieldNum, field]: [string, any]) => {
+          const num = parseInt(fieldNum);
+          const fieldName = field.description || ISO8583_FIELDS[num]?.name || 'Reserved';
+          report += `\n[${String(num).padStart(3, '0')}] ${fieldName}\n`;
+          if (field.raw) {
+            report += `  Raw: ${field.raw}\n`;
+          }
+          report += `  Value: ${field.value || '<empty>'}\n`;
+        });
+    }
+
+    // Raw Message Section
+    if (parsedResult.raw) {
+      report += '\n' + '='.repeat(50) + '\n';
+      report += 'RAW HEX MESSAGE\n';
+      report += '-'.repeat(30) + '\n';
+      report += parsedResult.raw.match(/.{1,2}/g)?.join(' ') || parsedResult.raw;
+    }
+
+    // Create download
+    const blob = new Blob([report], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `iso8583_message_${parsedResult.mti || 'parsed'}_${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [parsedResult]);
+
+  const handleDownloadJSON = useCallback(() => {
+    if (!parsedResult || parsedResult.error) return;
+
+    // Create a clean JSON export
+    const exportData = {
+      mti: parsedResult.mti,
+      mtiDescription: parsedResult.fields[0]?.description,
+      bitmap: {
+        primary: parsedResult.primaryBitmap,
+        secondary: parsedResult.secondaryBitmap,
+        presentFields: parsedResult.presentFields
+      },
+      fields: Object.entries(parsedResult.fields)
+        .filter(([key]) => key !== '0')
+        .sort(([a], [b]) => parseInt(a) - parseInt(b))
+        .reduce((acc, [fieldNum, field]: [string, any]) => {
+          const num = parseInt(fieldNum);
+          acc[num] = {
+            name: field.description || ISO8583_FIELDS[num]?.name || 'Reserved',
+            value: field.value,
+            raw: field.raw
+          };
+          return acc;
+        }, {} as Record<number, any>),
+      raw: parsedResult.raw,
+      exportedAt: new Date().toISOString()
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `iso8583_message_${parsedResult.mti || 'parsed'}_${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [parsedResult]);
+
+  const handleDownloadCSV = useCallback(() => {
+    if (!parsedResult || parsedResult.error) return;
+
+    // Create CSV export
+    const csvRows: string[] = [];
+
+    // Header
+    csvRows.push('DE,Field Name,Raw Value,Display Value,Length,Type');
+
+    // MTI
+    if (parsedResult.mti) {
+      csvRows.push(`0,Message Type Indicator (MTI),${parsedResult.mti},${parsedResult.mti},${parsedResult.mti.length},FIXED`);
+    }
+
+    // Fields
+    Object.entries(parsedResult.fields)
+      .filter(([key]) => key !== '0')
+      .sort(([a], [b]) => parseInt(a) - parseInt(b))
+      .forEach(([fieldNum, field]: [string, any]) => {
+        const num = parseInt(fieldNum);
+        const fieldName = field.description || ISO8583_FIELDS[num]?.name || 'Reserved';
+        const rawValue = field.raw || '';
+        const displayValue = field.value || '';
+        const length = rawValue.length;
+        const format = ISO8583_FIELDS[num]?.format || 'UNKNOWN';
+
+        // Escape CSV values
+        const escapeCsv = (val: string) => {
+          if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+            return `"${val.replace(/"/g, '""')}"`;
+          }
+          return val;
+        };
+
+        csvRows.push(`${num},"${fieldName}",${escapeCsv(rawValue)},${escapeCsv(displayValue)},${length},${format}`);
+      });
+
+    // Bitmap info
+    csvRows.push('');
+    csvRows.push('Bitmap Information');
+    csvRows.push(`Primary Bitmap,${parsedResult.primaryBitmap}`);
+    if (parsedResult.secondaryBitmap) {
+      csvRows.push(`Secondary Bitmap,${parsedResult.secondaryBitmap}`);
+    }
+    csvRows.push(`Present Fields,${parsedResult.presentFields.filter((f: number) => f !== 1).join(', ')}`);
+
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `iso8583_message_${parsedResult.mti || 'parsed'}_${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [parsedResult]);
 
   return (
     <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-6 ${className}`}>
@@ -439,7 +602,7 @@ const Iso8583Parser = ({ className = '' }) => {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 mb-6">
+      <div className="flex flex-wrap gap-3 mb-6">
         <button
           onClick={handleParse}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm font-medium"
@@ -452,6 +615,37 @@ const Iso8583Parser = ({ className = '' }) => {
         >
           Load Example
         </button>
+        {parsedResult && !parsedResult.error && (
+          <>
+            <button
+              onClick={handleDownload}
+              className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors text-sm font-medium flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Download TXT
+            </button>
+            <button
+              onClick={handleDownloadJSON}
+              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors text-sm font-medium flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Download JSON
+            </button>
+            <button
+              onClick={handleDownloadCSV}
+              className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors text-sm font-medium flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Download CSV
+            </button>
+          </>
+        )}
         <button
           onClick={handleClear}
           className="px-4 py-2 bg-white dark:bg-zinc-900 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-zinc-700 rounded-md hover:bg-slate-50 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm"

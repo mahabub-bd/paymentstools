@@ -20,7 +20,8 @@ export enum LengthType {
   FIXED = 'fixed',         // Fixed length
   LLVAR = 'llvar',         // 2-digit length
   LLLVAR = 'lllvar',       // 3-digit length
-  LLLLVAR = 'llllvar'      // 4-digit length
+  LLLLVAR = 'llllvar',     // 4-digit length
+  LLLLLVAR = 'lllllvar'    // 5-digit length
 }
 
 // Field definition interface
@@ -47,6 +48,8 @@ export interface ParseResult {
   hasSecondaryBitmap: boolean;
   hasTPDU: boolean;
   tpdu?: string;
+  lengthPrefix?: string;
+  header?: string;
   warnings: string[];
   debugInfo?: {
     bitmapBinary: string;
@@ -81,59 +84,59 @@ export const ISO8583_FIELD_DEFINITIONS: Record<number, FieldDefinition> = {
   9: { number: 9, name: 'Conversion Rate, Settlement', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 8 },
   10: { number: 10, name: 'Conversion Rate, Cardholder Billing', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 8 },
   11: { number: 11, name: 'System Trace Audit Number (STAN)', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 6 },
-  12: { number: 12, name: 'Local Transaction Time', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 12 },
+  12: { number: 12, name: 'Processing Time (Local)', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 6 },
   13: { number: 13, name: 'Local Transaction Date', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 4 },
   14: { number: 14, name: 'Expiration Date', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 4 },
-  15: { number: 15, name: 'Settlement Date', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 4 },
+  15: { number: 15, name: 'Date Settlement', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 6 },
   16: { number: 16, name: 'Conversion Date', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 4 },
   17: { number: 17, name: 'Capture Date', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 4 },
-  18: { number: 18, name: 'Merchant Type', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 4 },
-  19: { number: 19, name: 'Acquiring Institution Country Code', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 3 },
-  20: { number: 20, name: 'PAN Extended Country Code', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 3 },
+  18: { number: 18, name: 'Merchant Category Code', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 4 },
+  19: { number: 19, name: 'Acquirer Institution Country Code', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 3 },
+  20: { number: 20, name: 'PAN Country Code', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 3 },
   21: { number: 21, name: 'Forwarding Institution Country Code', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 3 },
   22: { number: 22, name: 'Point of Service Entry Mode', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 3 },
   23: { number: 23, name: 'Card Sequence Number', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 3 },
-  24: { number: 24, name: 'Network International Identifier', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 3 },
+  24: { number: 24, name: 'Function Code', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 3 },
   25: { number: 25, name: 'Point of Service Condition Code', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 2 },
   26: { number: 26, name: 'Point of Service PIN Capture Code', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 2 },
   27: { number: 27, name: 'Authorization Identification Response Length', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 1 },
-  28: { number: 28, name: 'Amount, Transaction Fee', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 8 },
-  29: { number: 29, name: 'Amount, Settlement Fee', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 8 },
-  30: { number: 30, name: 'Amount, Transaction Processing Fee', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 8 },
-  31: { number: 31, name: 'Amount, Settlement Processing Fee', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 8 },
-  32: { number: 32, name: 'Acquiring Institution ID Code', type: FieldType.ALPHANUMERIC, lengthType: LengthType.LLVAR, maxLength: 11 },
-  33: { number: 33, name: 'Forwarding Institution ID Code', type: FieldType.ALPHANUMERIC, lengthType: LengthType.LLVAR, maxLength: 11 },
-  34: { number: 34, name: 'Primary Account Number Extended', type: FieldType.ALPHANUMERIC, lengthType: LengthType.LLVAR, maxLength: 28 },
+  28: { number: 28, name: 'Amount Transaction Fee', type: FieldType.ALPHANUMERIC, lengthType: LengthType.FIXED, maxLength: 9 },
+  29: { number: 29, name: 'Reconciliation Indicator', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 3 },
+  30: { number: 30, name: 'Amounts Original', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 24 },
+  31: { number: 31, name: 'Security Additional Data - Private', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLVAR, maxLength: 999 },
+  32: { number: 32, name: 'Acquiring Institution ID', type: FieldType.NUMERIC, lengthType: LengthType.LLVAR, maxLength: 11 },
+  33: { number: 33, name: 'Forwarding Institution ID', type: FieldType.NUMERIC, lengthType: LengthType.LLVAR, maxLength: 11 },
+  34: { number: 34, name: 'PAN Extended', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLVAR, maxLength: 28 },
   35: { number: 35, name: 'Track 2 Data', type: FieldType.TRACK2, lengthType: LengthType.LLVAR, maxLength: 37 },
   36: { number: 36, name: 'Track 3 Data', type: FieldType.ALPHANUMERIC, lengthType: LengthType.LLLVAR, maxLength: 104 },
   37: { number: 37, name: 'Retrieval Reference Number', type: FieldType.ALPHANUMERIC, lengthType: LengthType.FIXED, maxLength: 12 },
   38: { number: 38, name: 'Authorization Identification Response', type: FieldType.ALPHANUMERIC, lengthType: LengthType.FIXED, maxLength: 6 },
   39: { number: 39, name: 'Response Code', type: FieldType.ALPHANUMERIC, lengthType: LengthType.FIXED, maxLength: 2 },
-  40: { number: 40, name: 'Service Restriction Code', type: FieldType.ALPHANUMERIC, lengthType: LengthType.FIXED, maxLength: 3 },
+  40: { number: 40, name: 'Service Code', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 3 },
   41: { number: 41, name: 'Card Acceptor Terminal ID', type: FieldType.ALPHANUMERIC, lengthType: LengthType.FIXED, maxLength: 8 },
   42: { number: 42, name: 'Card Acceptor ID Code', type: FieldType.ALPHANUMERIC, lengthType: LengthType.FIXED, maxLength: 15 },
-  43: { number: 43, name: 'Card Acceptor Name/Location', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLVAR, maxLength: 40 },
-  44: { number: 44, name: 'Additional Response Data', type: FieldType.ALPHANUMERIC, lengthType: LengthType.LLVAR, maxLength: 25 },
-  45: { number: 45, name: 'Track 1 Data', type: FieldType.ALPHANUMERIC, lengthType: LengthType.LLLVAR, maxLength: 76 },
-  46: { number: 46, name: 'Additional Data - ISO', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLVAR, maxLength: 999 },
-  47: { number: 47, name: 'Additional Data - National', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLVAR, maxLength: 999 },
-  48: { number: 48, name: 'Additional Data - Private', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLVAR, maxLength: 999 },
+  43: { number: 43, name: 'Card Acceptor Name', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.FIXED, maxLength: 40 },
+  44: { number: 44, name: 'Additional Response Data', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLVAR, maxLength: 99 },
+  45: { number: 45, name: 'Track 1 Data', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLVAR, maxLength: 75 },
+  46: { number: 46, name: 'Amounts Fees', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLVAR, maxLength: 206 },
+  47: { number: 47, name: 'Additional Data', type: FieldType.BINARY, lengthType: LengthType.LLLVAR, maxLength: 999 },
+  48: { number: 48, name: 'Additional Data', type: FieldType.BINARY, lengthType: LengthType.LLLVAR, maxLength: 999 },
   49: { number: 49, name: 'Transaction Currency Code', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 3 },
   50: { number: 50, name: 'Settlement Currency Code', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 3 },
   51: { number: 51, name: 'Cardholder Billing Currency Code', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 3 },
   52: { number: 52, name: 'PIN Data', type: FieldType.BINARY, lengthType: LengthType.FIXED, maxLength: 8 },
   53: { number: 53, name: 'Security Related Control Information', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 16 },
   54: { number: 54, name: 'Additional Amounts', type: FieldType.ALPHANUMERIC, lengthType: LengthType.LLLVAR, maxLength: 120 },
-  55: { number: 55, name: 'ICC Data - EMV TLV', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLLVAR, maxLength: 999 },
-  56: { number: 56, name: 'Reserved ISO', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLLVAR, maxLength: 999 },
+  55: { number: 55, name: 'ICC Related Data', type: FieldType.BINARY, lengthType: LengthType.LLLVAR, maxLength: 255 },
+  56: { number: 56, name: 'Original Data Elements', type: FieldType.NUMERIC, lengthType: LengthType.LLVAR, maxLength: 35 },
   57: { number: 57, name: 'Reserved ISO', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLVAR, maxLength: 999 },
   58: { number: 58, name: 'Reserved ISO', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLVAR, maxLength: 999 },
-  59: { number: 59, name: 'Reserved ISO', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLVAR, maxLength: 999 },
-  60: { number: 60, name: 'Reserved ISO', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLVAR, maxLength: 999 },
-  61: { number: 61, name: 'Reserved ISO', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLVAR, maxLength: 999 },
-  62: { number: 62, name: 'Reserved ISO', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLVAR, maxLength: 999 },
-  63: { number: 63, name: 'Reserved ISO', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLLVAR, maxLength: 999 },
-  64: { number: 64, name: 'Reserved ISO', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLVAR, maxLength: 999 },
+  59: { number: 59, name: 'Additional Data', type: FieldType.BINARY, lengthType: LengthType.LLLVAR, maxLength: 999 },
+  60: { number: 60, name: 'Operation Specific Data', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLVAR, maxLength: 999 },
+  61: { number: 61, name: 'Long Additional Data', type: FieldType.BINARY, lengthType: LengthType.LLLLLVAR, maxLength: 15000 },
+  62: { number: 62, name: 'Secure Reference', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLVAR, maxLength: 999 },
+  63: { number: 63, name: 'Additional Data', type: FieldType.ALPHANUMERIC_SPECIAL, lengthType: LengthType.LLLVAR, maxLength: 999 },
+  64: { number: 64, name: 'MAC', type: FieldType.BINARY, lengthType: LengthType.FIXED, maxLength: 4 },
   65: { number: 65, name: 'MAC (Message Authentication Code)', type: FieldType.BINARY, lengthType: LengthType.LLLVAR, maxLength: 999 },
   66: { number: 66, name: 'Settlement Code', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 1 },
   67: { number: 67, name: 'Extended Payment Code', type: FieldType.NUMERIC, lengthType: LengthType.FIXED, maxLength: 2 },
@@ -535,9 +538,10 @@ export function parseISO8583(
           } catch {
             estimatedLength = 20;
           }
-        } else if (fieldDef.lengthType === LengthType.LLLLVAR) {
+        } else if (fieldDef.lengthType === LengthType.LLLLVAR || fieldDef.lengthType === LengthType.LLLLLVAR) {
           try {
-            const { length, dataStartOffset } = parseVariableLengthPrefix(cleanHex, pos, 4);
+            const digits = fieldDef.lengthType === LengthType.LLLLLVAR ? 5 : 4;
+            const { length, dataStartOffset } = parseVariableLengthPrefix(cleanHex, pos, digits);
             estimatedLength = length + dataStartOffset / 2;
           } catch {
             estimatedLength = 20;
@@ -631,22 +635,16 @@ function parseField(
       rawValue = lengthIndicator + message.substring(pos + 4, pos + 4 + dataLength);
     }
   } else if (fieldDef.lengthType === LengthType.LLLVAR) {
-    // 3-digit length (6 hex chars)
-    lengthIndicator = message.substring(pos, pos + 6);
-
-    // For numeric fields with BCD length (decimal digits only)
-    if (fieldDef.type === FieldType.NUMERIC && !/[A-Fa-f]/.test(lengthIndicator)) {
-      const length = parseInt(lengthIndicator, 10); // BCD: number of digits
-      dataLength = length; // 1 digit = 1 hex char in this format
-      rawValue = lengthIndicator + message.substring(pos + 6, pos + 6 + dataLength);
-    } else {
-      // For alphanumeric or hex length indicators
-      const length = parseInt(lengthIndicator, 16); // Hex: number of bytes
-      dataLength = length * 2; // 1 byte = 2 hex chars
-      rawValue = lengthIndicator + message.substring(pos + 6, pos + 6 + dataLength);
-    }
-  } else if (fieldDef.lengthType === LengthType.LLLLVAR) {
-    const parsedLength = parseVariableLengthPrefix(message, pos, 4);
+    const parsedLength = parseVariableLengthPrefix(message, pos, 3);
+    lengthIndicator = parsedLength.lengthIndicator;
+    dataLength = parsedLength.length * 2;
+    rawValue = lengthIndicator + message.substring(
+      pos + parsedLength.dataStartOffset,
+      pos + parsedLength.dataStartOffset + dataLength
+    );
+  } else if (fieldDef.lengthType === LengthType.LLLLVAR || fieldDef.lengthType === LengthType.LLLLLVAR) {
+    const digits = fieldDef.lengthType === LengthType.LLLLLVAR ? 5 : 4;
+    const parsedLength = parseVariableLengthPrefix(message, pos, digits);
     lengthIndicator = parsedLength.lengthIndicator;
     dataLength = parsedLength.length * 2;
     rawValue = lengthIndicator + message.substring(
@@ -659,14 +657,7 @@ function parseField(
       // For numeric fixed-length fields, check if data is hex-encoded ASCII
       // Hex-encoded ASCII: each digit is 1 byte (2 hex chars), e.g., "3030" = "00"
       // BCD: each digit is 1 nibble (1 hex char), e.g., "00" = "00"
-      const sampleHex = message.substring(pos, pos + Math.min(4, message.length - pos));
-      if (/^(30|31|32|33|34|35|36|37|38|39)+$/.test(sampleHex)) {
-        // Hex-encoded ASCII: extract fieldDef.maxLength * 2 hex chars
-        dataLength = fieldDef.maxLength * 2;
-      } else {
-        // BCD format: extract fieldDef.maxLength hex chars
-        dataLength = fieldDef.maxLength;
-      }
+      dataLength = getFixedNumericDataLength(message, pos, fieldDef.maxLength);
       rawValue = message.substring(pos, pos + dataLength);
     } else {
       // Other types
@@ -753,7 +744,7 @@ function parseTrack2Data(message: string, pos: number): ParsedField {
 function parseVariableLengthPrefix(
   message: string,
   pos: number,
-  digits: 2 | 3 | 4
+  digits: 2 | 3 | 4 | 5
 ): { lengthIndicator: string; length: number; dataStartOffset: number } {
   const asciiHexLength = digits * 2;
   const asciiHexCandidate = message.substring(pos, pos + asciiHexLength);
@@ -791,22 +782,22 @@ function parseVariableLengthPrefix(
 
 /**
  * Parse ICC/EMV data (DE55)
- * Format: LLLLVAR + TLV tags
+ * Format: LLLVAR + TLV tags
  */
 function parseICCData(message: string, pos: number): ParsedField {
-  const { lengthIndicator, length, dataStartOffset } = parseVariableLengthPrefix(message, pos, 4);
+  const { lengthIndicator, length, dataStartOffset } = parseVariableLengthPrefix(message, pos, 3);
   const availableDataLength = Math.max(0, message.length - pos - dataStartOffset);
   const dataLength = Math.min(length * 2, availableDataLength);
   const iccHex = message.substring(pos + dataStartOffset, pos + dataStartOffset + dataLength);
 
   return {
     number: 55,
-    name: 'ICC Data - EMV TLV',
+    name: 'ICC Related Data',
     rawValue: lengthIndicator + iccHex,
     displayValue: formatTLVData(iccHex),
     length,
-    type: FieldType.ALPHANUMERIC_SPECIAL,
-    lengthType: LengthType.LLLLVAR,
+    type: FieldType.BINARY,
+    lengthType: LengthType.LLLVAR,
     isPresent: true
   };
 }
@@ -1017,33 +1008,17 @@ function parseFieldMixed(
         isPresent: true
       };
     } else {
-      // ALPHANUMERIC_SPECIAL: check for BCD length (nibbles) or hex-encoded ASCII length
-      // First, check if it's BCD format (nibbles) - each digit is 1 nibble (1 hex char)
-      // BCD format: length is 6 hex chars representing 3 decimal digits (each digit is 1 nibble)
-      const sixCharLen = message.substring(pos, pos + 6);
-      const decodedSixChars = hexToAscii(sixCharLen);
-      if (/^\d{3}$/.test(decodedSixChars)) {
-        // Hex-encoded ASCII length (e.g., "303033" = "003" = 3 bytes)
-        const length = parseInt(decodedSixChars, 10);
-        dataLength = length * 2; // Data is hex-encoded ASCII (2 hex chars per byte)
-        lengthIndicator = sixCharLen;
-        rawValue = lengthIndicator + message.substring(pos + 6, pos + 6 + dataLength);
-      } else if (!/[A-Fa-f]/.test(sixCharLen.substring(0, 3))) {
-        // BCD format: first 3 hex chars represent 3 decimal digits (each digit is 1 nibble)
-        // e.g., "003" = 3 bytes, "123" = 123 bytes
-        const length = parseInt(sixCharLen.substring(0, 3), 10);
-        dataLength = length * 2;
-        lengthIndicator = sixCharLen.substring(0, 3);
-        rawValue = lengthIndicator + message.substring(pos + 3, pos + 3 + dataLength);
-      } else {
-        // Pure hex length format (6 hex chars = 3 bytes)
-        const length = parseInt(sixCharLen, 16);
-        dataLength = length * 2;
-        rawValue = sixCharLen + message.substring(pos + 6, pos + 6 + dataLength);
-      }
+      const parsedLength = parseVariableLengthPrefix(message, pos, 3);
+      lengthIndicator = parsedLength.lengthIndicator;
+      dataLength = parsedLength.length * 2;
+      rawValue = lengthIndicator + message.substring(
+        pos + parsedLength.dataStartOffset,
+        pos + parsedLength.dataStartOffset + dataLength
+      );
     }
-  } else if (fieldDef.lengthType === LengthType.LLLLVAR) {
-    const parsedLength = parseVariableLengthPrefix(message, pos, 4);
+  } else if (fieldDef.lengthType === LengthType.LLLLVAR || fieldDef.lengthType === LengthType.LLLLLVAR) {
+    const digits = fieldDef.lengthType === LengthType.LLLLLVAR ? 5 : 4;
+    const parsedLength = parseVariableLengthPrefix(message, pos, digits);
     lengthIndicator = parsedLength.lengthIndicator;
     dataLength = parsedLength.length * 2;
     rawValue = lengthIndicator + message.substring(
@@ -1068,28 +1043,11 @@ function parseFieldMixed(
         isPresent: true
       };
     } else if (fieldDef.type === FieldType.NUMERIC) {
-      // For numeric fixed-length fields, check if data is hex-encoded ASCII
+      // For numeric fixed-length fields, determine if data is hex-encoded ASCII or BCD
       // Hex-encoded ASCII: each digit is 1 byte (2 hex chars), e.g., "3030" = "00"
       // BCD: each digit is 1 nibble (1 hex char), e.g., "00" = "00"
-      const sampleHex = message.substring(pos, pos + Math.min(8, message.length - pos));
-      // Check if at least 50% of sample is hex-encoded ASCII (pairs of "30"-"39")
-      let hexAsciiCount = 0;
-      let totalPairs = 0;
-      for (let i = 0; i < sampleHex.length - 1; i += 2) {
-        const pair = sampleHex.substring(i, i + 2);
-        if (/^(30|31|32|33|34|35|36|37|38|39)$/.test(pair)) {
-          hexAsciiCount++;
-        }
-        totalPairs++;
-      }
-      // If at least 50% of pairs are hex-encoded ASCII, assume hex-encoded format
-      if (totalPairs > 0 && hexAsciiCount >= totalPairs / 2) {
-        // Hex-encoded ASCII: extract fieldDef.maxLength * 2 hex chars (for maxLength digits)
-        dataLength = fieldDef.maxLength * 2;
-      } else {
-        // BCD format: extract fieldDef.maxLength hex chars (each char = 1 digit)
-        dataLength = fieldDef.maxLength;
-      }
+
+      dataLength = getFixedNumericDataLength(message, pos, fieldDef.maxLength, isMixed);
       rawValue = message.substring(pos, pos + dataLength);
     } else {
       // Hex format for other types
@@ -1212,28 +1170,16 @@ function convertToDisplayValue(
         dataHex = hex.substring(6, 6 + len * 2);
       }
     } else {
-      // ALPHANUMERIC_SPECIAL: check for hex-encoded ASCII length or BCD length
-      const sixCharLen = hex.substring(0, 6);
-      const decodedSixChars = hexToAscii(sixCharLen);
-      if (/^\d{3}$/.test(decodedSixChars)) {
-        // Hex-encoded ASCII length (e.g., "303033" = "003" = 3 bytes)
-        len = parseInt(decodedSixChars, 10);
-        lenBytes = 6;
-        dataHex = hex.substring(6, 6 + len * 2);
-      } else if (!/[A-Fa-f]/.test(sixCharLen.substring(0, 3))) {
-        // BCD format: first 3 hex chars represent 3 decimal digits
-        len = parseInt(sixCharLen.substring(0, 3), 10);
-        lenBytes = 3;
-        dataHex = hex.substring(3, 3 + len * 2);
-      } else {
-        // Pure hex length format (6 hex chars = 3 bytes)
-        len = parseInt(sixCharLen, 16);
-        lenBytes = 6;
-        dataHex = hex.substring(6, 6 + len * 2);
-      }
+      const parsedLength = parseVariableLengthPrefix(hex, 0, 3);
+      len = parsedLength.length;
+      lenBytes = parsedLength.dataStartOffset;
+      dataHex = hex.substring(lenBytes, lenBytes + len * 2);
     }
   } else if (lengthType === LengthType.LLLLVAR && hex.length > 4) {
     const parsedLength = parseVariableLengthPrefix(hex, 0, 4);
+    dataHex = hex.substring(parsedLength.dataStartOffset, parsedLength.dataStartOffset + parsedLength.length * 2);
+  } else if (lengthType === LengthType.LLLLLVAR && hex.length > 5) {
+    const parsedLength = parseVariableLengthPrefix(hex, 0, 5);
     dataHex = hex.substring(parsedLength.dataStartOffset, parsedLength.dataStartOffset + parsedLength.length * 2);
   }
 
@@ -1278,10 +1224,10 @@ function convertToDisplayValue(
             9: 8,   // Conversion Rate
             10: 8,  // Conversion Rate
             11: 6,  // STAN
-            12: 12,  // Local Transaction Time
+            12: 6,   // Processing Time (Local)
             13: 4,  // Local Transaction Date
             14: 4,  // Expiration Date
-            15: 4,  // Settlement Date
+            15: 6,  // Date Settlement
             16: 4,  // Conversion Date
             17: 4,  // Capture Date
             18: 4,  // Merchant Type
@@ -1295,12 +1241,12 @@ function convertToDisplayValue(
             37: 12, // Retrieval Reference Number
             38: 6,  // Authorization Code
             39: 2,  // Response Code
-            40: 3,  // Service Restriction Code
+            40: 3,  // Service Code
             41: 8,  // Card Acceptor Terminal ID
             42: 15, // Card Acceptor ID Code
             43: 40, // Card Acceptor Name/Location
-            44: 25, // Additional Response Data
-            45: 76, // Track 1 Data (max length)
+            44: 99, // Additional Response Data
+            45: 75, // Track 1 Data (max length)
             48: 999, // Additional Data - Private (max length)
             49: 3,  // Currency Code
             50: 3,  // Currency Code
@@ -1308,16 +1254,16 @@ function convertToDisplayValue(
             52: 16, // PIN Data
             53: 16, // Security Related Control Information
             54: 120, // Additional Amounts (max length)
-            55: 255, // ICC Data - EMV TLV (max length)
-            56: 999, // Reserved (max length)
+            55: 255, // ICC Related Data (max length)
+            56: 35,  // Original Data Elements
             57: 999, // Reserved (max length)
             58: 100, // Reserved (max length)
             59: 999, // Reserved (max length)
             60: 999, // Reserved (max length)
-            61: 999, // Reserved (max length)
+            61: 15000, // Long Additional Data
             62: 999, // Reserved (max length)
             63: 999, // Reserved (max length)
-            64: 8    // Message Authentication Code (MAC)
+            64: 8    // Message Authentication Code (MAC), displayed as 8 hex chars / 4 bytes
           };
           if (fieldNumber && fixedLengths[fieldNumber]) {
             dataHex = dataHex.substring(0, fixedLengths[fieldNumber]);
@@ -1443,6 +1389,27 @@ function isPrintableAsciiHex(hex: string): boolean {
   return true;
 }
 
+function isAsciiNumericHex(hex: string): boolean {
+  if (!hex || hex.length % 2 !== 0 || !/^[0-9A-Fa-f]+$/.test(hex)) return false;
+  return /^[0-9]+$/.test(hexToAscii(hex));
+}
+
+function getFixedNumericDataLength(
+  message: string,
+  pos: number,
+  digitLength: number,
+  forceAscii: boolean = false
+): number {
+  const asciiHexLength = digitLength * 2;
+  const asciiCandidate = message.substring(pos, pos + asciiHexLength);
+
+  if (forceAscii || (asciiCandidate.length === asciiHexLength && isAsciiNumericHex(asciiCandidate))) {
+    return asciiHexLength;
+  }
+
+  return digitLength;
+}
+
 /**
  * Convert ASCII to hex
  */
@@ -1518,14 +1485,17 @@ export function createISO8583(
 
     // Add length indicator if variable
     if (fieldDef.lengthType === LengthType.LLVAR) {
-      const len = value.length;
-      message += len.toString(16).toUpperCase().padStart(4, '0');
+      const len = fieldDef.type === FieldType.BINARY ? Math.ceil(value.length / 2) : value.length;
+      message += len.toString().padStart(2, '0');
     } else if (fieldDef.lengthType === LengthType.LLLVAR) {
-      const len = value.length;
-      message += len.toString(16).toUpperCase().padStart(6, '0');
+      const len = fieldDef.type === FieldType.BINARY ? Math.ceil(value.length / 2) : value.length;
+      message += len.toString().padStart(3, '0');
     } else if (fieldDef.lengthType === LengthType.LLLLVAR) {
       const len = Math.ceil(value.length / 2);
       message += len.toString().padStart(4, '0');
+    } else if (fieldDef.lengthType === LengthType.LLLLLVAR) {
+      const len = fieldDef.type === FieldType.BINARY ? Math.ceil(value.length / 2) : value.length;
+      message += len.toString().padStart(5, '0');
     }
 
     // Add value
