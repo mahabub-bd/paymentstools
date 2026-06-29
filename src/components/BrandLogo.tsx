@@ -1,5 +1,5 @@
-import logoDark from '../../images/logodark.png';
 import logoLight from '../../images/logo.png';
+import logoDark from '../../images/logodark.png';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface BrandLogoProps {

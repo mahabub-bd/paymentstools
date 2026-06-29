@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
+import * as XLSX from 'xlsx-js-style';
 import {
   parseISO8583,
   validateISO8583,
-  type ParseResult
+  type ParseResult,
+  type ParsedField
 } from '../utils/iso8583VersionParser';
 import { EmvTlvDisplay } from './EmvTlvDisplay';
 
@@ -62,6 +64,100 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
     setValidationResult(null);
   }, []);
 
+  const handleDownloadExcel = useCallback(() => {
+    if (!parsedResult) return;
+
+    const generatedAt = new Date().toLocaleString();
+    const cleanInput = parsedResult.rawMessage || input.replace(/\s/g, '').toUpperCase();
+    const fieldRows = Object.entries(parsedResult.fields)
+      .filter(([fieldNum]) => fieldNum !== '0')
+      .sort(([a], [b]) => parseInt(a) - parseInt(b))
+      .map(([fieldNum, field]) => {
+        const typedField = field as ParsedField;
+        return [
+          parseInt(fieldNum) >= 0 ? fieldNum : 'TPDU',
+          typedField.name,
+          typedField.lengthType.toUpperCase(),
+          typedField.rawValue,
+          typedField.displayValue || '<empty>'
+        ];
+      });
+
+    const headerRows = [
+      ['ISO 8583 Message Parser Output'],
+      ['Generated At', generatedAt],
+      ['Input Hex', cleanInput],
+      ['MTI', parsedResult.mti || '-', 'TPDU', parsedResult.tpdu || '-'],
+      ['Primary Bitmap', parsedResult.primaryBitmap || '-', 'Secondary Bitmap', parsedResult.secondaryBitmap || '-'],
+      ['Present Fields', parsedResult.presentFields.filter(field => field > 1).join(', ') || '-'],
+      [],
+      ['DE', 'Description', 'Length Type', 'Value (Hex)', 'Decoded']
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet([...headerRows, ...fieldRows]);
+
+    ws['!cols'] = [
+      { wch: 12 },
+      { wch: 36 },
+      { wch: 14 },
+      { wch: 46 },
+      { wch: 36 }
+    ];
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
+      { s: { r: 2, c: 1 }, e: { r: 2, c: 4 } },
+      { s: { r: 4, c: 1 }, e: { r: 4, c: 2 } },
+      { s: { r: 4, c: 4 }, e: { r: 4, c: 4 } }
+    ];
+
+    const borderStyle = { style: 'thin', color: { auto: 1 } };
+    const cellBorder = {
+      top: borderStyle,
+      bottom: borderStyle,
+      left: borderStyle,
+      right: borderStyle
+    };
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+
+    for (let R = range.s.r; R <= range.e.r; R++) {
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+        if (!ws[cellAddress]) continue;
+
+        ws[cellAddress].s = {
+          border: cellBorder,
+          alignment: {
+            vertical: 'center',
+            horizontal: 'left',
+            wrapText: C >= 1
+          }
+        };
+
+        if (R === 7) {
+          ws[cellAddress].s = {
+            ...ws[cellAddress].s,
+            fill: { fgColor: { rgb: 'dbeafe' } },
+            font: { bold: true },
+            alignment: { horizontal: 'center', vertical: 'center' }
+          };
+        }
+      }
+    }
+
+    if (ws['A1']) {
+      ws['A1'].s = {
+        font: { bold: true, sz: 14 },
+        alignment: { horizontal: 'left' }
+      };
+    }
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'ISO 8583 Output');
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    XLSX.writeFile(wb, `iso8583-parser-output-${timestamp}.xlsx`);
+  }, [input, parsedResult]);
+
   // Auto-parse when input changes
   useEffect(() => {
     if (input.trim().length > 20) {
@@ -90,10 +186,37 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
     }
   }, [input, hasTPDU]);
 
+  const canDownload = parsedResult !== null && Object.entries(parsedResult.fields).filter(([fieldNum]) => fieldNum !== '0').length > 0;
+
   return (
     <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-6 ${className}`}>
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .printable-area, .printable-area * {
+            visibility: visible;
+          }
+          .printable-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            padding: 20px;
+            background: white !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+          @page {
+            size: landscape;
+            margin: 0.5cm;
+          }
+        }
+      `}</style>
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-6 no-print">
         <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
           ISO 8583 Message Parser
         </h1>
@@ -103,7 +226,7 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
       </div>
 
       {/* TPDU Toggle */}
-      <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+      <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800 no-print">
         <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
@@ -123,7 +246,7 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
       </div>
 
       {/* Input Section */}
-      <div className="mb-4">
+      <div className="mb-4 no-print">
         <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
           ISO 8583 Message (Hex)
         </label>
@@ -137,7 +260,7 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6 no-print">
         <button
           onClick={handleParse}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm font-medium"
@@ -156,6 +279,24 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
         >
           Clear
         </button>
+        <button
+          onClick={handleDownloadExcel}
+          disabled={!canDownload}
+          className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors text-sm font-medium"
+          title={!canDownload ? 'Parse ISO 8583 data before downloading' : 'Download parsed ISO 8583 output as Excel'}
+        >
+          <span className="hidden sm:inline">Download Excel</span>
+          <span className="sm:hidden">Excel</span>
+        </button>
+        <button
+          onClick={() => window.print()}
+          disabled={!canDownload}
+          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors text-sm font-medium"
+          title={!canDownload ? 'Parse ISO 8583 data before printing' : 'Print or save as PDF'}
+        >
+          <span className="hidden sm:inline">Download PDF</span>
+          <span className="sm:hidden">PDF</span>
+        </button>
       </div>
 
       {/* Validation Result */}
@@ -172,7 +313,7 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
 
       {/* Parse Result */}
       {parsedResult && (
-        <div className="space-y-4">
+        <div className="printable-area space-y-4">
           {/* TPDU and MTI Combined Display */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* TPDU Display */}

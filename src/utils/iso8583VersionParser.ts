@@ -70,6 +70,7 @@ export interface ParsedField {
   type: FieldType;
   lengthType: LengthType;
   isPresent: boolean;
+  consumedLength?: number;
 }
 
 // ISO 8583 Field definitions for all versions
@@ -465,6 +466,9 @@ export function parseISO8583(
     // Detect if message is in mixed format (hex structure + ASCII data)
     const mixedFormat = isMixedFormat(cleanHex);
 
+    const dataFields = result.presentFields.filter(field => field > 1);
+    const lastDataField = dataFields[dataFields.length - 1];
+
     // Parse each data field
     for (const fieldNum of result.presentFields) {
       if (fieldNum <= 1) continue; // Skip bitmap field
@@ -507,9 +511,14 @@ export function parseISO8583(
           continue;
         }
 
-        const parsedField = parseFieldMixed(cleanHex, pos, fieldDef, mixedFormat);
+        let parsedField = parseFieldMixed(cleanHex, pos, fieldDef, mixedFormat);
+
+        if (fieldNum === 60 && fieldNum === lastDataField) {
+          parsedField = absorbPrintableTrailingData(cleanHex, pos, parsedField);
+        }
+
         result.fields[fieldNum] = parsedField;
-        pos += parsedField.rawValue.length;
+        pos += parsedField.consumedLength ?? parsedField.rawValue.length;
       } catch (e) {
         const errorMsg = (e as Error).message;
         result.warnings.push(`Field ${fieldNum}: ${errorMsg} at position ${pos}`);
@@ -746,6 +755,25 @@ function parseVariableLengthPrefix(
   pos: number,
   digits: 2 | 3 | 4 | 5
 ): { lengthIndicator: string; length: number; dataStartOffset: number } {
+  if (digits === 3) {
+    const binaryLengthCandidate = message.substring(pos, pos + 4);
+    const binaryLength = parseInt(binaryLengthCandidate, 16);
+    const availableDataLength = message.length - pos - 4;
+
+    if (
+      /^00[0-9A-Fa-f]{2}$/.test(binaryLengthCandidate) &&
+      binaryLength > 0 &&
+      binaryLength <= 999 &&
+      binaryLength * 2 <= availableDataLength
+    ) {
+      return {
+        lengthIndicator: binaryLengthCandidate,
+        length: binaryLength,
+        dataStartOffset: 4
+      };
+    }
+  }
+
   const asciiHexLength = digits * 2;
   const asciiHexCandidate = message.substring(pos, pos + asciiHexLength);
   const decodedAsciiLength = hexToAscii(asciiHexCandidate);
@@ -756,6 +784,25 @@ function parseVariableLengthPrefix(
       length: parseInt(decodedAsciiLength, 10),
       dataStartOffset: asciiHexLength
     };
+  }
+
+  if (digits === 3) {
+    const binaryLengthCandidate = message.substring(pos, pos + 4);
+    const binaryLength = parseInt(binaryLengthCandidate, 16);
+    const availableDataLength = message.length - pos - 4;
+
+    if (
+      /^[0-9A-Fa-f]{4}$/.test(binaryLengthCandidate) &&
+      binaryLength > 0 &&
+      binaryLength <= 999 &&
+      binaryLength * 2 <= availableDataLength
+    ) {
+      return {
+        lengthIndicator: binaryLengthCandidate,
+        length: binaryLength,
+        dataStartOffset: 4
+      };
+    }
   }
 
   const bcdCandidate = message.substring(pos, pos + digits);
@@ -778,6 +825,38 @@ function parseVariableLengthPrefix(
   }
 
   throw new Error(`Invalid ${digits}-digit variable length indicator`);
+}
+
+function absorbPrintableTrailingData(
+  message: string,
+  pos: number,
+  parsedField: ParsedField
+): ParsedField {
+  const nextPos = pos + parsedField.rawValue.length;
+  const trailingHex = message.substring(nextPos);
+
+  if (!trailingHex || !isPrintableAsciiHex(trailingHex)) {
+    return parsedField;
+  }
+
+  try {
+    const { dataStartOffset } = parseVariableLengthPrefix(parsedField.rawValue + trailingHex, 0, 3);
+    const rawValue = parsedField.rawValue + trailingHex;
+    const dataHex = rawValue.substring(dataStartOffset);
+
+    if (!isPrintableAsciiHex(dataHex)) {
+      return parsedField;
+    }
+
+    return {
+      ...parsedField,
+      rawValue,
+      displayValue: hexToAscii(dataHex),
+      length: rawValue.length
+    };
+  } catch {
+    return parsedField;
+  }
 }
 
 /**
@@ -838,6 +917,35 @@ function parseFieldMixed(
   let dataLength = 0;
   let rawValue = '';
   let lengthIndicator = '';
+
+  if (fieldDef.number === 63) {
+    const shiftedLengthIndicator = message.substring(pos + 2, pos + 6);
+    const shiftedLength = parseInt(shiftedLengthIndicator, 16);
+    const availableDataLength = message.length - pos - 6;
+
+    if (
+      isPrintableAsciiHex(message.substring(pos, pos + 2)) &&
+      /^00[0-9A-Fa-f]{2}$/.test(shiftedLengthIndicator) &&
+      shiftedLength > 0 &&
+      shiftedLength <= 999 &&
+      shiftedLength * 2 <= availableDataLength
+    ) {
+      const valueHex = message.substring(pos + 6, pos + 6 + shiftedLength * 2);
+      const rawValue = shiftedLengthIndicator + valueHex;
+
+      return {
+        number: fieldDef.number,
+        name: fieldDef.name,
+        rawValue,
+        displayValue: hexToAscii(valueHex),
+        length: rawValue.length,
+        type: fieldDef.type,
+        lengthType: fieldDef.lengthType,
+        isPresent: true,
+        consumedLength: 2 + rawValue.length
+      };
+    }
+  }
 
   if (fieldDef.number === 41) {
     const possibleLength = parseInt(message.substring(pos, pos + 2), 10);
