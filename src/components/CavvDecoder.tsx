@@ -24,18 +24,66 @@ const CavvDecoder = ({ className = '' }) => {
   const [result, setResult] = useState<CavvDecodeResult | null>(null);
   const [error, setError] = useState('');
 
-  // CAVV Algorithm definitions
-  const ALGORITHM_DEFINITIONS: Record<string, string> = {
-    '00': 'Reserved',
-    '01': 'DVV (Dynamic Data Authentication) - EMV-CAP',
-    '02': 'ACS generated CAVV (3D Secure v1.0)',
-    '03': 'Merchant plug-in (MPI) generated CAVV (3D Secure v1.0)',
-    '04': 'EMV Contactless CAVV (Contactless EMV)',
-    '10': 'Visa dCVV (Dynamic Card Verification)',
-    '11': 'UDF (User Defined Field)',
-    '12': 'ACS generated CAVV (3D Secure v2.0/v2.1)',
-    '13': 'ACS generated CAVV (3D Secure v2.2)',
-    '14': 'ACS generated CAVV (3D Secure v2.3)',
+  const AUTHENTICATION_RESULT_CODES: Record<string, string> = {
+    '00': 'Authentication Successful',
+    '01': 'Authentication Failed',
+    '02': 'Authentication Could Not Be Performed',
+    '03': 'Authentication Attempted',
+    '04': 'Authentication Not Available',
+    '05': 'Authentication Rejected',
+    '06': 'Authentication Error',
+    '07': 'Authentication Bypassed',
+  };
+
+  const AUTHENTICATION_METHODS: Record<string, string> = {
+    '01': 'Static password',
+    '02': 'Dynamic password',
+    '03': 'Challenge flow using OTP',
+    '04': 'Challenge flow using KBA',
+    '05': 'Challenge flow using OOB',
+    '06': 'Challenge flow using biometric',
+    '07': 'Challenge flow using app login',
+    '08': 'Challenge flow using OOB with App login method',
+  };
+
+  const CAVV_KEY_INDICATORS: Record<string, string> = {
+    '00': 'Issuer CAVV Key Set and/or attempts Key Set 0',
+    '01': 'Issuer CAVV Key Set and/or attempts Key Set 1',
+    '02': 'Issuer CAVV Key Set and/or attempts Key Set 2',
+    '03': 'Issuer CAVV Key Set and/or attempts Key Set 3',
+  };
+
+  const CAVV_VERSIONS: Record<string, string> = {
+    '0': 'CAVV without Supplemental Data',
+    '1': 'CAVV with Authentication Tracking Number',
+    '2': 'CAVV with ACS Transaction ID',
+    '7': 'CAVV with Supplemental Data',
+  };
+
+  const THREE_DS_PROTOCOL_VERSIONS: Record<string, string> = {
+    '1': '3-D Secure 1.x',
+    '2': 'EMV 3DS 2.0.x',
+    '4': 'EMV 3DS 2.1.x',
+    '5': 'EMV 3DS 2.2.x',
+    '6': 'EMV 3DS 2.3.x',
+  };
+
+  const CURRENCY_CODES: Record<string, string> = {
+    '840': 'US Dollar',
+    '978': 'Euro',
+    '826': 'Pound Sterling',
+    '392': 'Japanese Yen',
+    '050': 'Taka',
+  };
+
+  const formatDayOfYear = (dayValue: string) => {
+    const dayNumber = Number(dayValue);
+    if (!Number.isInteger(dayNumber) || dayNumber < 1 || dayNumber > 366) {
+      return dayValue;
+    }
+
+    const date = new Date(Date.UTC(2025, 0, dayNumber));
+    return `${dayValue} (${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' })})`;
   };
 
   // Decode CAVV from hex
@@ -54,99 +102,92 @@ const CavvDecoder = ({ className = '' }) => {
       };
     }
 
-    if (cleanHex.length < 40 || cleanHex.length > 80) {
+    if (cleanHex.length !== 40) {
       return {
         rawValue: cleanHex,
         isValid: false,
         algorithm: 'Invalid',
         length: cleanHex.length / 2,
         fields: [],
-        summary: `Invalid CAVV length (${cleanHex.length / 2} bytes). Expected 20-40 bytes.`,
+        summary: `Invalid CAVV length (${cleanHex.length / 2} bytes). Expected 20 bytes (40 hex characters).`,
         rawData: cleanHex,
       };
     }
 
-    // Parse first byte for algorithm and length indicator
-    const firstByte = cleanHex.substring(0, 2);
-    const firstByteBits = parseInt(firstByte, 16).toString(2).padStart(8, '0');
-
-    // Extract algorithm (bits 0-1) and length info (bits 2-7)
-    const algoBits = firstByteBits.substring(6, 8);
-    const lengthBits = firstByteBits.substring(0, 6);
-    const algoCode = parseInt(algoBits, 2).toString(16).padStart(2, '0');
-    const lengthIndicator = parseInt(lengthBits, 2);
-
-    const algorithm = ALGORITHM_DEFINITIONS[algoCode] || `Unknown (0x${algoCode})`;
-
-    // Parse CAVV data structure
     const fields: CavvField[] = [];
-    let pos = 0;
-
-    // Field 1: Algorithm and Length (1 byte)
-    fields.push({
-      name: 'Control Byte',
-      value: firstByte,
-      description: `Algorithm: ${algoCode} (${algorithm}), Length indicator: ${lengthIndicator}`,
-      bits: 8,
-      startIndex: 0,
-      endIndex: 2,
-    });
-    pos += 2;
-
-    // Field : CAVV Data / Authentication Data (variable, typically 8-20 bytes)
-    const cavvDataLength = Math.min((lengthIndicator * 2) || 16, cleanHex.length - pos);
-    if (cavvDataLength > 0) {
-      const cavvData = cleanHex.substring(pos, pos + cavvDataLength);
+    const addField = (name: string, start: number, length: number, description: string, bits?: number) => {
       fields.push({
-        name: 'CAVV Data / Authentication Data',
-        value: cavvData,
-        description: `Cryptographic value (${cavvDataLength / 2} bytes)`,
-        startIndex: pos,
-        endIndex: pos + cavvDataLength,
+        name,
+        value: cleanHex.substring(start, start + length),
+        description,
+        bits,
+        startIndex: start,
+        endIndex: start + length,
       });
-      pos += cavvDataLength;
-    }
+    };
 
-    // Field 3: Cardholder Authentication Verification Value (8 bytes typical)
-    if (pos + 16 <= cleanHex.length) {
-      const cavvValue = cleanHex.substring(pos, pos + 16);
-      fields.push({
-        name: 'CAVV Value',
-        value: cavvValue,
-        description: 'Primary CAVV cryptographic value (8 bytes)',
-        startIndex: pos,
-        endIndex: pos + 16,
-      });
-      pos += 16;
-    }
+    const authResultCode = cleanHex.substring(0, 2);
+    const authenticationMethod = cleanHex.substring(2, 4);
+    const keyIndicator = cleanHex.substring(4, 6);
+    const supplementaryData = cleanHex.substring(14, 30);
+    const versionAndAction = cleanHex.substring(30, 32);
+    const informationalData = cleanHex.substring(32, 40);
 
-    // Field 4: Additional Data (remaining bytes)
-    if (pos < cleanHex.length) {
-      const additionalData = cleanHex.substring(pos);
-      fields.push({
-        name: 'Additional Data',
-        value: additionalData,
-        description: `Additional authentication data (${additionalData.length / 2} bytes)`,
-        startIndex: pos,
-        endIndex: cleanHex.length,
-      });
-    }
+    const authAmountMinor = parseInt(supplementaryData.substring(0, 10), 16);
+    const authAmount = Number.isNaN(authAmountMinor) ? 'Unknown' : (authAmountMinor / 100).toFixed(2);
+    const currencyCode = supplementaryData.substring(10, 13);
+    const dayOfYear = supplementaryData.substring(13, 16);
+    const cavvVersion = versionAndAction.substring(0, 1);
+    const authenticationAction = versionAndAction.substring(1, 2);
+    const ipAddress = informationalData.match(/.{2}/g)?.map((byte) => parseInt(byte, 16)).join('.');
 
-    // Determine summary
-    let summary = '';
-    if (algoCode === '00') {
-      summary = 'Reserved CAVV value - not for production use';
-    } else if (algoCode === '12' || algoCode === '13' || algoCode === '14') {
-      summary = `3D Secure v2 CAVV (${algoCode === '12' ? 'v2.0/v2.1' : algoCode === '13' ? 'v2.2' : 'v2.3'}) - ACS generated`;
-    } else if (algoCode === '02' || algoCode === '03') {
-      summary = `3D Secure v1.0 CAVV (${algoCode === '02' ? 'ACS' : 'MPI'} generated)`;
-    } else if (algoCode === '04') {
-      summary = 'EMV Contactless CAVV for contactless transactions';
-    } else if (algoCode === '10') {
-      summary = 'Visa dCVV (Dynamic Card Verification Value)';
-    } else {
-      summary = `CAVV with algorithm: ${algorithm}`;
-    }
+    addField(
+      '3-D Secure Authentication Results Codes',
+      0,
+      2,
+      AUTHENTICATION_RESULT_CODES[authResultCode] || `Unknown authentication result code (${authResultCode})`,
+      8
+    );
+    addField(
+      'Authentication Method',
+      2,
+      2,
+      AUTHENTICATION_METHODS[authenticationMethod] || `Unknown authentication method (${authenticationMethod})`,
+      8
+    );
+    addField(
+      'CAVV Key Indicator',
+      4,
+      2,
+      CAVV_KEY_INDICATORS[keyIndicator] || `Issuer CAVV Key Set and/or attempts Key Set ${keyIndicator}`,
+      8
+    );
+    addField('CAVV Value', 6, 4, 'Cardholder Authentication Verification Value', 16);
+    addField('Seed Value', 10, 4, 'Seed value used for CAVV validation', 16);
+    addField(
+      'Supplementary Data',
+      14,
+      16,
+      `Authentication Amount: ${authAmount}; Currency Code: ${currencyCode}${CURRENCY_CODES[currencyCode] ? ` (${CURRENCY_CODES[currencyCode]})` : ''}; Date (DDD value): ${formatDayOfYear(dayOfYear)}`,
+      64
+    );
+    addField(
+      'CAVV Version and Authentication Action',
+      30,
+      2,
+      `CAVV Version: ${cavvVersion} - ${CAVV_VERSIONS[cavvVersion] || 'Unknown'}; 3DS Protocol Version: ${THREE_DS_PROTOCOL_VERSIONS[authenticationAction] || `Unknown (${authenticationAction})`}`,
+      8
+    );
+    addField(
+      'Informational Data',
+      32,
+      8,
+      `Merchant Identifier OR IP address: ${ipAddress || informationalData}`,
+      32
+    );
+
+    const algorithm = CAVV_VERSIONS[cavvVersion] || `Unknown CAVV version (${cavvVersion})`;
+    const summary = `${AUTHENTICATION_RESULT_CODES[authResultCode] || 'Authentication result decoded'}; ${THREE_DS_PROTOCOL_VERSIONS[authenticationAction] || '3DS protocol version decoded'}`;
 
     return {
       rawValue: cleanHex,
@@ -180,11 +221,10 @@ const CavvDecoder = ({ className = '' }) => {
   }, [input, decodeCavv]);
 
   const handleExample = useCallback(() => {
-    // Example CAVV values for different algorithms
     const examples = [
-      'AAABBBCCCDDDDEEEEFFFFGGGGHHHHIIJJ', // Generic example
-      '0212345678ABCDEF0123456789ABCDEF', // 3DS v1.0 ACS generated
-      '12A1B2C3D4E5F6A7B8C9D0E1F2A3B4C5', // 3DS v2.0 ACS generated
+      '000802012345670000001109978258747F000001',
+      '00080289ABCDEF0000001109978258747F000001',
+      '0305011234567800000003E8978258740A000001',
     ];
     setInput(examples[Math.floor(Math.random() * examples.length)]);
     setError('');
@@ -314,15 +354,16 @@ const CavvDecoder = ({ className = '' }) => {
 
           {/* Algorithm Reference */}
           <div className="p-3 sm:p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-            <h3 className="text-xs sm:text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">Algorithm Reference</h3>
+            <h3 className="text-xs sm:text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">CAVV Field Reference</h3>
             <div className="space-y-1 text-[10px] sm:text-xs text-amber-700 dark:text-amber-300">
-              <div><span className="font-mono">00</span> - Reserved</div>
-              <div><span className="font-mono">01</span> - DVV (EMV-CAP)</div>
-              <div><span className="font-mono">02</span> - 3DS v1.0 ACS generated</div>
-              <div><span className="font-mono">03</span> - 3DS v1.0 MPI generated</div>
-              <div><span className="font-mono">04</span> - EMV Contactless</div>
-              <div><span className="font-mono">10</span> - Visa dCVV</div>
-              <div><span className="font-mono">12-14</span> - 3DS v2.0/v2.1/v2.2/v2.3</div>
+              <div><span className="font-mono">1 byte</span> - 3-D Secure authentication result code</div>
+              <div><span className="font-mono">1 byte</span> - Authentication method</div>
+              <div><span className="font-mono">1 byte</span> - CAVV key indicator</div>
+              <div><span className="font-mono">2 bytes</span> - CAVV value</div>
+              <div><span className="font-mono">2 bytes</span> - Seed value</div>
+              <div><span className="font-mono">8 bytes</span> - Supplementary amount, currency, and date data</div>
+              <div><span className="font-mono">1 byte</span> - CAVV version and authentication action</div>
+              <div><span className="font-mono">4 bytes</span> - Merchant identifier or IP address</div>
             </div>
           </div>
         </div>
