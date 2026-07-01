@@ -4,7 +4,9 @@ import {
   parseISO8583,
   validateISO8583,
   type ParseResult,
-  type ParsedField
+  type ParsedField,
+  ISO8583_FIELD_DEFINITIONS,
+  LengthType
 } from '../utils/iso8583VersionParser';
 import { EmvTlvDisplay } from './EmvTlvDisplay';
 
@@ -477,60 +479,128 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
               {Object.entries(parsedResult.fields).filter(([k]) => k !== '0').length === 0 ? (
                 <p className="text-slate-500 dark:text-zinc-500 text-xs">No data fields found. Check the bitmap and message format.</p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-200 dark:border-zinc-700">
-                        <th className="text-left py-2 px-3 font-semibold text-slate-700 dark:text-slate-300 text-xs">DE</th>
-                        <th className="text-left py-2 px-3 font-semibold text-slate-700 dark:text-slate-300 text-xs">Description</th>
-                        <th className="text-left py-2 px-3 font-semibold text-slate-700 dark:text-slate-300 text-xs">Value (hex)</th>
-                        <th className="text-left py-2 px-3 font-semibold text-slate-700 dark:text-slate-300 text-xs">Decoded</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(parsedResult.fields)
-                        .filter(([key]) => key !== '0')
-                        .sort(([a], [b]) => parseInt(a) - parseInt(b))
-                        .map(([fieldNum, field]: [string, any]) => {
-                          const decodedValue = field.displayValue || '<empty>';
-                          const shouldWrapDecoded = decodedValue.length > 72 || decodedValue.includes('\n');
+                <>
+                  {/* Desktop Table View */}
+                  <div className="hidden lg:block overflow-x-auto">
+                    <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
+                      <colgroup>
+                        <col style={{ width: '50px' }} />
+                        <col style={{ width: '220px' }} />
+                        <col style={{ width: '180px' }} />
+                        <col style={{ width: '180px' }} />
+                      </colgroup>
+                      <thead>
+                        <tr className="border-b border-slate-200 dark:border-zinc-700">
+                          <th className="text-left py-2 px-3 font-semibold text-slate-700 dark:text-slate-300 text-xs">DE</th>
+                          <th className="text-left py-2 px-3 font-semibold text-slate-700 dark:text-slate-300 text-xs">Description</th>
+                          <th className="text-left py-2 px-3 font-semibold text-slate-700 dark:text-slate-300 text-xs">Value (hex)</th>
+                          <th className="text-left py-2 px-3 font-semibold text-slate-700 dark:text-slate-300 text-xs">Decoded</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(parsedResult.fields)
+                          .filter(([key]) => key !== '0')
+                          .sort(([a], [b]) => parseInt(a) - parseInt(b))
+                          .map(([fieldNum, field]: [string, any]) => {
+                            const decodedValue = field.displayValue || '<empty>';
+                            const shouldWrapDecoded = decodedValue.length > 72 || decodedValue.includes('\n');
 
-                          return (
-                            <tr
-                              key={fieldNum}
-                              className="border-b border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800"
-                            >
-                              <td className="py-2 px-3 font-mono text-blue-600 dark:text-blue-400 text-xs font-bold">
-                                {parseInt(fieldNum) === -2 ? 'Length' : parseInt(fieldNum) >= 0 ? fieldNum : 'TPDU'}
-                              </td>
-                              <td className="py-2 px-3 text-slate-700 dark:text-slate-300 text-xs">
-                                {field.name}
-                                {field.lengthType !== 'FIXED' && (
-                                  <span className="text-slate-500 dark:text-zinc-500 ml-1">
-                                    ({field.lengthType.toUpperCase()})
-                                  </span>
-                                )}
-                              </td>
-                              <td className="py-2 px-3 font-mono text-slate-800 dark:text-slate-200 text-xs break-all">
-                                {field.rawValue}
-                              </td>
-                              <td className="py-2 px-3 text-slate-700 dark:text-slate-300 text-xs max-w-[32rem]">
-                                {fieldNum === '55' && field.rawValue && field.rawValue.length > 4 ? (
-                                  <div className="w-full">
-                                    <EmvTlvDisplay hexData={field.rawValue.substring(field.lengthType === 'llllvar' ? 4 : 6)} />
+                            return (
+                              <tr
+                                key={fieldNum}
+                                className="border-b border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800"
+                              >
+                                <td className="py-2 px-3 font-mono text-blue-600 dark:text-blue-400 text-xs font-bold">
+                                  {parseInt(fieldNum) === -2 ? 'Length' : parseInt(fieldNum) >= 0 ? fieldNum : 'TPDU'}
+                                </td>
+                                <td className="py-2 px-3 text-slate-700 dark:text-slate-300 text-xs">
+                                  <div className="font-medium truncate">{field.name}</div>
+                                  <div className="text-slate-500 dark:text-zinc-500 text-[10px] mt-0.5">
+                                    {(() => {
+                                      const fieldDef = ISO8583_FIELD_DEFINITIONS[parseInt(fieldNum)];
+                                      if (!fieldDef) return `${field.type}...`;
+                                      return fieldDef.lengthType === LengthType.FIXED
+                                        ? `${fieldDef.type}${fieldDef.maxLength}`
+                                        : `${fieldDef.type}...${fieldDef.lengthType.toUpperCase()}`;
+                                    })()}
                                   </div>
-                                ) : (
-                                  <span className={shouldWrapDecoded ? 'block whitespace-pre-wrap break-words leading-relaxed' : 'block whitespace-nowrap'}>
-                                    {decodedValue}
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                    </tbody>
-                  </table>
-                </div>
+                                </td>
+                                <td className="py-2 px-3 font-mono text-slate-800 dark:text-slate-200 text-xs break-all">
+                                  {field.rawValue}
+                                </td>
+                                <td className="py-2 px-3 text-slate-700 dark:text-slate-300 text-xs">
+                                  {fieldNum === '55' && field.rawValue && field.rawValue.length > 4 ? (
+                                    <div className="w-full">
+                                      <EmvTlvDisplay hexData={field.rawValue.substring(field.lengthType === 'llllvar' ? 4 : 6)} />
+                                    </div>
+                                  ) : (
+                                    <span className={shouldWrapDecoded ? 'block whitespace-pre-wrap break-words leading-relaxed' : 'block whitespace-nowrap overflow-hidden text-ellipsis'}>
+                                      {decodedValue}
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className="lg:hidden space-y-3">
+                    {Object.entries(parsedResult.fields)
+                      .filter(([key]) => key !== '0')
+                      .sort(([a], [b]) => parseInt(a) - parseInt(b))
+                      .map(([fieldNum, field]: [string, any]) => {
+                        const decodedValue = field.displayValue || '<empty>';
+                        const fieldDef = ISO8583_FIELD_DEFINITIONS[parseInt(fieldNum)];
+                        const typeLengthStr = fieldDef
+                          ? fieldDef.lengthType === LengthType.FIXED
+                            ? `${fieldDef.type}${fieldDef.maxLength}`
+                            : `${fieldDef.type}...${fieldDef.lengthType.toUpperCase()}`
+                          : `${field.type}...`;
+
+                        return (
+                          <div
+                            key={fieldNum}
+                            className="bg-white dark:bg-zinc-800 rounded-lg border border-slate-200 dark:border-zinc-700 p-3"
+                          >
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded font-mono font-bold">
+                                  {parseInt(fieldNum) === -2 ? 'Length' : parseInt(fieldNum) >= 0 ? fieldNum : 'TPDU'}
+                                </span>
+                                <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-mono">{typeLengthStr}</span>
+                              </div>
+                            </div>
+                            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">{field.name}</h4>
+
+                            <div className="space-y-2">
+                              <div>
+                                <span className="text-[10px] text-slate-500 dark:text-zinc-500 uppercase tracking-wide">Hex Value</span>
+                                <div className="font-mono text-xs text-slate-800 dark:text-slate-200 break-all bg-slate-50 dark:bg-zinc-900 p-1.5 rounded mt-0.5">
+                                  {field.rawValue}
+                                </div>
+                              </div>
+
+                              <div>
+                                <span className="text-[10px] text-slate-500 dark:text-zinc-500 uppercase tracking-wide">Decoded</span>
+                                <div className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">
+                                  {fieldNum === '55' && field.rawValue && field.rawValue.length > 4 ? (
+                                    <EmvTlvDisplay hexData={field.rawValue.substring(field.lengthType === 'llllvar' ? 4 : 6)} />
+                                  ) : (
+                                    <span className="block whitespace-pre-wrap break-words leading-relaxed">
+                                      {decodedValue}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </>
               )}
             </div>
           )}

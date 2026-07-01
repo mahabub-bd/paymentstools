@@ -99,11 +99,11 @@ export function MtiReference({ className = '' }: { className?: string }) {
   return (
     <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-3 sm:p-4 md:p-6 ${className}`}>
       {/* Header */}
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white mb-2">
+      <div className="mb-3 sm:mb-4">
+        <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white mb-1.5">
           ISO 8583 MTI Reference
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
+        <p className="text-slate-600 dark:text-slate-400 text-xs">
           Message Type Identifier (MTI) codes and their usage in ISO 8583 transactions
         </p>
       </div>
@@ -165,10 +165,10 @@ export function MtiReference({ className = '' }: { className?: string }) {
             return (
               <div
                 key={item.mti}
-                className="p-3 border-b border-slate-200 dark:border-zinc-800 last:border-b-0 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
+                className="p-2.5 border-b border-slate-200 dark:border-zinc-800 last:border-b-0 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
               >
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <span className="font-mono text-base font-bold text-blue-600 dark:text-blue-400">
+                <div className="flex items-start justify-between gap-3 mb-1.5">
+                  <span className="font-mono text-sm font-bold text-blue-600 dark:text-blue-400">
                     {item.mti}
                   </span>
                   <span className={`px-2 py-0.5 rounded-md text-xs font-medium shrink-0 ${getCategoryColor(category.color)}`}>
@@ -188,7 +188,7 @@ export function MtiReference({ className = '' }: { className?: string }) {
 
         {/* Desktop Table Layout */}
         <div className="hidden sm:block overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs">
             <thead>
               <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
                 <th className="text-left py-2 px-3 sm:py-3 sm:px-4 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">MTI</th>
@@ -206,12 +206,12 @@ export function MtiReference({ className = '' }: { className?: string }) {
                     className="border-b border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
                   >
                     <td className="py-2 px-3 sm:py-3 sm:px-4 whitespace-nowrap">
-                      <span className="font-mono text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
+                      <span className="font-mono text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400">
                         {item.mti}
                       </span>
                     </td>
                     <td className="py-2 px-3 sm:py-3 sm:px-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-md text-xs font-medium ${getCategoryColor(category.color)}`}>
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${getCategoryColor(category.color)}`}>
                         {category.id.toUpperCase()}
                       </span>
                     </td>

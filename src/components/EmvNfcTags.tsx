@@ -189,11 +189,11 @@ export function EmvNfcTags({ className = '' }: { className?: string }) {
   return (
     <div className={`w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-3 sm:p-4 md:p-6 ${className}`}>
       {/* Header */}
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white mb-2">
+      <div className="mb-3 sm:mb-4">
+        <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white mb-1.5">
           EMV & NFC Tags Reference
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
+        <p className="text-slate-600 dark:text-slate-400 text-xs">
           Complete list of EMV and NFC tags with descriptions, sources, and formats
         </p>
       </div>
@@ -248,11 +248,11 @@ export function EmvNfcTags({ className = '' }: { className?: string }) {
           {filteredTags.map((tag, idx) => (
             <div
               key={`${tag.tag}-${idx}`}
-              className="p-3 border-b border-slate-200 dark:border-zinc-800 last:border-b-0 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors cursor-pointer"
+              className="p-2.5 border-b border-slate-200 dark:border-zinc-800 last:border-b-0 hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors cursor-pointer"
               onClick={() => setSelectedTag(tag)}
             >
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <span className="font-mono text-base font-bold text-blue-600 dark:text-blue-400">
+              <div className="flex items-start justify-between gap-2 mb-1.5">
+                <span className="font-mono text-sm font-bold text-blue-600 dark:text-blue-400">
                   {tag.tag}
                 </span>
                 <div className="flex gap-1 shrink-0">
@@ -264,7 +264,7 @@ export function EmvNfcTags({ className = '' }: { className?: string }) {
                   </span>
                 </div>
               </div>
-              <div className="text-sm font-medium text-slate-800 dark:text-slate-200 mb-1">
+              <div className="text-xs font-medium text-slate-800 dark:text-slate-200 mb-1">
                 {tag.name}
               </div>
               <div className="flex gap-2 text-[10px] text-slate-500 dark:text-zinc-500">
@@ -278,7 +278,7 @@ export function EmvNfcTags({ className = '' }: { className?: string }) {
 
         {/* Desktop Table Layout */}
         <div className="hidden sm:block overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs">
             <thead>
               <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
                 <th className="text-left py-2 px-3 sm:py-3 sm:px-4 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap min-w-[80px]">Tag</th>
@@ -297,12 +297,12 @@ export function EmvNfcTags({ className = '' }: { className?: string }) {
                   onClick={() => setSelectedTag(tag)}
                 >
                   <td className="py-2 px-3 sm:py-3 sm:px-4 whitespace-nowrap">
-                    <span className="font-mono text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
+                    <span className="font-mono text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400">
                       {tag.tag}
                     </span>
                   </td>
                   <td className="py-2 px-3 sm:py-3 sm:px-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-md text-xs font-medium ${getSourceColor(tag.source)}`}>
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${getSourceColor(tag.source)}`}>
                       {tag.source}
                     </span>
                   </td>
@@ -316,7 +316,7 @@ export function EmvNfcTags({ className = '' }: { className?: string }) {
                     {tag.length}
                   </td>
                   <td className="py-2 px-3 sm:py-3 sm:px-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-md text-xs font-medium ${getTypeColor(tag.type)}`}>
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${getTypeColor(tag.type)}`}>
                       {tag.type}
                     </span>
                   </td>
@@ -339,10 +339,10 @@ export function EmvNfcTags({ className = '' }: { className?: string }) {
           <div className="bg-white dark:bg-zinc-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-3 sm:mb-4">
               <div className="min-w-0 flex-1">
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white font-mono truncate">
+                <h2 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white font-mono truncate">
                   {selectedTag.tag}
                 </h2>
-                <h3 className="text-base sm:text-lg font-semibold text-slate-600 dark:text-slate-300 mt-1 truncate">
+                <h3 className="text-sm sm:text-base font-semibold text-slate-600 dark:text-slate-300 mt-1 truncate">
                   {selectedTag.name}
                 </h3>
               </div>
