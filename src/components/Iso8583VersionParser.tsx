@@ -8,10 +8,11 @@ import {
 } from '../utils/iso8583VersionParser';
 import { EmvTlvDisplay } from './EmvTlvDisplay';
 
-const EXAMPLE_MESSAGE = '0000000000081022380000028000109300000628140758001502140757062830304954434C504F5339000630303030303232';
+const EXAMPLE_MESSAGE = '0068000000000008002220000000C1000296000007010958270000184954434C504F5339303030303030303030504F533030320034FF010EDF200130DF210130DF240354504BFF020EDF200130DF210130DF240354414B00173031345356312E315F3230323531323035';
 
 export function Iso8583VersionParser({ className = '' }: { className?: string }) {
   const [input, setInput] = useState('');
+  const [hasLengthPrefix, setHasLengthPrefix] = useState(true);
   const [hasTPDU, setHasTPDU] = useState(true);
   const [parsedResult, setParsedResult] = useState<ParseResult | null>(null);
   const [validationResult, setValidationResult] = useState<{ valid: boolean; errors: string[] } | null>(null);
@@ -26,12 +27,12 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
     try {
       const cleanInput = input.replace(/\s/g, '');
 
-      // Parse with TPDU option and MSB-first bitmap
-      const result = parseISO8583(cleanInput, { hasTPDU, msbFirstBitmap: true });
+      // Parse with optional length prefix, TPDU option, and MSB-first bitmap
+      const result = parseISO8583(cleanInput, { hasLengthPrefix, hasTPDU, msbFirstBitmap: true });
       setParsedResult(result);
 
       // Validate
-      const validation = validateISO8583(cleanInput);
+      const validation = validateISO8583(cleanInput, { hasLengthPrefix, hasTPDU });
       setValidationResult(validation);
     } catch (e) {
       setParsedResult({
@@ -46,13 +47,15 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
         hasSecondaryBitmap: false,
         hasTPDU: hasTPDU,
         tpdu: undefined,
+        lengthPrefix: undefined,
         warnings: [(e as Error).message]
       });
     }
-  }, [input, hasTPDU]);
+  }, [input, hasLengthPrefix, hasTPDU]);
 
   const handleLoadExample = useCallback(() => {
     setInput(EXAMPLE_MESSAGE);
+    setHasLengthPrefix(true);
     setHasTPDU(true);
     setParsedResult(null);
     setValidationResult(null);
@@ -74,8 +77,9 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
       .sort(([a], [b]) => parseInt(a) - parseInt(b))
       .map(([fieldNum, field]) => {
         const typedField = field as ParsedField;
+        const numericField = parseInt(fieldNum);
         return [
-          parseInt(fieldNum) >= 0 ? fieldNum : 'TPDU',
+          numericField === -2 ? 'Length' : numericField >= 0 ? fieldNum : 'TPDU',
           typedField.name,
           typedField.lengthType.toUpperCase(),
           typedField.rawValue,
@@ -87,7 +91,8 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
       ['ISO 8583 Message Parser Output'],
       ['Generated At', generatedAt],
       ['Input Hex', cleanInput],
-      ['MTI', parsedResult.mti || '-', 'TPDU', parsedResult.tpdu || '-'],
+      ['Length Prefix', parsedResult.lengthPrefix || '-', 'TPDU', parsedResult.tpdu || '-'],
+      ['MTI', parsedResult.mti || '-'],
       ['Primary Bitmap', parsedResult.primaryBitmap || '-', 'Secondary Bitmap', parsedResult.secondaryBitmap || '-'],
       ['Present Fields', parsedResult.presentFields.filter(field => field > 1).join(', ') || '-'],
       [],
@@ -166,13 +171,13 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
           const cleanInput = input.replace(/\s/g, '');
           console.log('Parsing message, length:', cleanInput.length);
           console.log('First 100 chars:', cleanInput.substring(0, 100));
-          const result = parseISO8583(cleanInput, { hasTPDU, msbFirstBitmap: true });
+          const result = parseISO8583(cleanInput, { hasLengthPrefix, hasTPDU, msbFirstBitmap: true });
           console.log('Parse result MTI:', result.mti);
           console.log('Parse result bitmap:', result.primaryBitmap);
           console.log('Parse result fields:', Object.keys(result.fields).length, 'fields');
           console.log('Present fields:', result.presentFields);
           setParsedResult(result);
-          const validation = validateISO8583(cleanInput);
+          const validation = validateISO8583(cleanInput, { hasLengthPrefix, hasTPDU });
           setValidationResult(validation);
         } catch (e) {
           // Show error in warnings - don't set partial result to avoid type issues
@@ -184,7 +189,7 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
       setParsedResult(null);
       setValidationResult(null);
     }
-  }, [input, hasTPDU]);
+  }, [input, hasLengthPrefix, hasTPDU]);
 
   const canDownload = parsedResult !== null && Object.entries(parsedResult.fields).filter(([fieldNum]) => fieldNum !== '0').length > 0;
 
@@ -225,9 +230,26 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
         </p>
       </div>
 
-      {/* TPDU Toggle */}
-      <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800 no-print">
-        <label className="flex items-center gap-3 cursor-pointer">
+      {/* Header Toggles */}
+      <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-3 no-print">
+        <label className="flex items-center gap-3 cursor-pointer p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+          <input
+            type="checkbox"
+            checked={hasLengthPrefix}
+            onChange={(e) => setHasLengthPrefix(e.target.checked)}
+            className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+          />
+          <div className="flex-1">
+            <span className="text-sm font-medium text-purple-800 dark:text-purple-200">
+              Message has Length Prefix
+            </span>
+            <p className="text-xs text-purple-600 dark:text-purple-400 mt-0.5">
+              Length is a 2-byte header before TPDU, for example 0068
+            </p>
+          </div>
+        </label>
+
+        <label className="flex items-center gap-3 cursor-pointer p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
           <input
             type="checkbox"
             checked={hasTPDU}
@@ -239,7 +261,7 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
               Message has TPDU (Network Header)
             </span>
             <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
-              TPDU is a 5-byte (10 hex chars) network header that precedes ISO 8583 messages
+              TPDU is a 5-byte header after length prefix, for example 0000000000
             </p>
           </div>
         </label>
@@ -253,7 +275,7 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="600000000002007238048128E08010166210947..."
+          placeholder="0068000000000008002220000000C1000..."
           className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 min-h-[100px]"
           rows={5}
         />
@@ -314,25 +336,38 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
       {/* Parse Result */}
       {parsedResult && (
         <div className="printable-area space-y-4">
-          {/* TPDU and MTI Combined Display */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* TPDU Display */}
-            {parsedResult.tpdu && (
-              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                <label className="text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide">TPDU (Network Header)</label>
-                <p className="font-mono text-lg font-bold text-amber-800 dark:text-amber-200 mt-1">
-                  {parsedResult.tpdu.match(/.{1,2}/g)?.join(' ') || parsedResult.tpdu}
-                </p>
+          {/* Header Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {parsedResult.lengthPrefix && (
+              <div className="p-2.5 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg min-w-0">
+                <div className="text-xs font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wide">Length</div>
+                <div className="mt-1 flex items-baseline gap-2 min-w-0">
+                  <span className="font-mono text-base font-bold text-purple-800 dark:text-purple-200 break-all">
+                    {parsedResult.lengthPrefix.match(/.{1,2}/g)?.join(' ') || parsedResult.lengthPrefix}
+                  </span>
+                  <span className="text-xs text-purple-600 dark:text-purple-400 shrink-0">({parseInt(parsedResult.lengthPrefix, 16)} bytes)</span>
+                </div>
               </div>
             )}
 
-            {/* MTI Display */}
+            {parsedResult.tpdu && (
+              <div className="p-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg min-w-0">
+                <div className="text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide">TPDU</div>
+                <div className="mt-1 flex items-baseline gap-2 min-w-0">
+                  <span className="font-mono text-base font-bold text-amber-800 dark:text-amber-200 break-all">
+                    {parsedResult.tpdu.match(/.{1,2}/g)?.join(' ') || parsedResult.tpdu}
+                  </span>
+                  <span className="text-xs text-amber-600 dark:text-amber-400 shrink-0">Network Header</span>
+                </div>
+              </div>
+            )}
+
             {parsedResult.mti && (
-              <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <label className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">Message Type Indicator</label>
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 font-mono">{parsedResult.mti}</p>
-                  <p className="text-xs text-blue-600 dark:text-blue-400 text-right">{parsedResult.mtiDescription}</p>
+              <div className="p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg min-w-0">
+                <div className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">MTI</div>
+                <div className="mt-1 flex items-baseline gap-2 min-w-0">
+                  <span className="font-mono text-base font-bold text-blue-600 dark:text-blue-400 shrink-0">{parsedResult.mti}</span>
+                  <span className="text-xs text-blue-600 dark:text-blue-400 truncate">{parsedResult.mtiDescription}</span>
                 </div>
               </div>
             )}
@@ -456,36 +491,43 @@ export function Iso8583VersionParser({ className = '' }: { className?: string })
                       {Object.entries(parsedResult.fields)
                         .filter(([key]) => key !== '0')
                         .sort(([a], [b]) => parseInt(a) - parseInt(b))
-                        .map(([fieldNum, field]: [string, any]) => (
-                          <tr
-                            key={fieldNum}
-                            className="border-b border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800"
-                          >
-                            <td className="py-2 px-3 font-mono text-blue-600 dark:text-blue-400 text-xs font-bold">
-                              {parseInt(fieldNum) >= 0 ? fieldNum : 'TPDU'}
-                            </td>
-                            <td className="py-2 px-3 text-slate-700 dark:text-slate-300 text-xs">
-                              {field.name}
-                              {field.lengthType !== 'FIXED' && (
-                                <span className="text-slate-500 dark:text-zinc-500 ml-1">
-                                  ({field.lengthType.toUpperCase()})
-                                </span>
-                              )}
-                            </td>
-                            <td className="py-2 px-3 font-mono text-slate-800 dark:text-slate-200 text-xs break-all">
-                              {field.rawValue}
-                            </td>
-                            <td className="py-2 px-3 text-slate-700 dark:text-slate-300 text-xs">
-                              {fieldNum === '55' && field.rawValue && field.rawValue.length > 4 ? (
-                                <div className="w-full">
-                                  <EmvTlvDisplay hexData={field.rawValue.substring(field.lengthType === 'llllvar' ? 4 : 6)} />
-                                </div>
-                              ) : (
-                                <span className="whitespace-pre-wrap break-words">{field.displayValue || '<empty>'}</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
+                        .map(([fieldNum, field]: [string, any]) => {
+                          const decodedValue = field.displayValue || '<empty>';
+                          const shouldWrapDecoded = decodedValue.length > 72 || decodedValue.includes('\n');
+
+                          return (
+                            <tr
+                              key={fieldNum}
+                              className="border-b border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800"
+                            >
+                              <td className="py-2 px-3 font-mono text-blue-600 dark:text-blue-400 text-xs font-bold">
+                                {parseInt(fieldNum) === -2 ? 'Length' : parseInt(fieldNum) >= 0 ? fieldNum : 'TPDU'}
+                              </td>
+                              <td className="py-2 px-3 text-slate-700 dark:text-slate-300 text-xs">
+                                {field.name}
+                                {field.lengthType !== 'FIXED' && (
+                                  <span className="text-slate-500 dark:text-zinc-500 ml-1">
+                                    ({field.lengthType.toUpperCase()})
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-2 px-3 font-mono text-slate-800 dark:text-slate-200 text-xs break-all">
+                                {field.rawValue}
+                              </td>
+                              <td className="py-2 px-3 text-slate-700 dark:text-slate-300 text-xs max-w-[32rem]">
+                                {fieldNum === '55' && field.rawValue && field.rawValue.length > 4 ? (
+                                  <div className="w-full">
+                                    <EmvTlvDisplay hexData={field.rawValue.substring(field.lengthType === 'llllvar' ? 4 : 6)} />
+                                  </div>
+                                ) : (
+                                  <span className={shouldWrapDecoded ? 'block whitespace-pre-wrap break-words leading-relaxed' : 'block whitespace-nowrap'}>
+                                    {decodedValue}
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
                     </tbody>
                   </table>
                 </div>

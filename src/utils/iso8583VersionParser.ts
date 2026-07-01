@@ -348,12 +348,14 @@ export function getMTIDescription(mti: string): string {
 export function parseISO8583(
   message: string,
   options?: {
+    hasLengthPrefix?: boolean; // Message has 2-byte network length prefix
     hasTPDU?: boolean;        // Message has TPDU (network) header
     tpduLength?: number;      // TPDU length in bytes (default 5)
     msbFirstBitmap?: boolean; // Bitmap uses MSB-first bit order within each byte
   }
 ): ParseResult {
   const cleanHex = message.replace(/\s/g, '');
+  const hasLengthPrefix = options?.hasLengthPrefix === true;
   const hasTPDU = options?.hasTPDU === true;
   const tpduLength = options?.tpduLength || 5; // Default TPDU is 5 bytes (10 hex chars)
   const msbFirstBitmap = options?.msbFirstBitmap === true;
@@ -375,6 +377,27 @@ export function parseISO8583(
 
   try {
     let pos = 0;
+
+    if (hasLengthPrefix) {
+      const lengthPrefix = cleanHex.substring(pos, pos + 4);
+      if (lengthPrefix.length < 4) {
+        throw new Error('Message too short for length prefix (expected 4 hex chars)');
+      }
+
+      const declaredLength = parseInt(lengthPrefix, 16);
+      result.lengthPrefix = lengthPrefix;
+      result.fields[-2] = {
+        number: -2,
+        name: 'Message Length Prefix',
+        rawValue: lengthPrefix,
+        displayValue: `${declaredLength} bytes`,
+        length: 2,
+        type: FieldType.NUMERIC,
+        lengthType: LengthType.FIXED,
+        isPresent: true
+      };
+      pos += 4;
+    }
 
     // Handle TPDU (Network Header) if present
     if (hasTPDU) {
@@ -459,6 +482,7 @@ export function parseISO8583(
         pos += bitmapLength;
       }
     }
+    const positionAfterBitmap = pos;
 
     // Parse present fields from bitmap
     result.presentFields = parseBitmapFields(result.bitmap, msbFirstBitmap);
@@ -576,7 +600,7 @@ export function parseISO8583(
     // Add debug info
     result.debugInfo = {
       bitmapBinary: primaryBitmap.split('').map(c => parseInt(c, 16).toString(2).padStart(4, '0')).join(' '),
-      positionAfterBitmap: 4 + bitmapLength,
+      positionAfterBitmap,
       finalPosition: pos,
       messageLength: cleanHex.length,
       remainingData: pos < cleanHex.length ? cleanHex.substring(pos) : ''
@@ -757,7 +781,9 @@ function parseVariableLengthPrefix(
 ): { lengthIndicator: string; length: number; dataStartOffset: number } {
   if (digits === 3) {
     const binaryLengthCandidate = message.substring(pos, pos + 4);
-    const binaryLength = parseInt(binaryLengthCandidate, 16);
+    const binaryLength = /^[0-9]{4}$/.test(binaryLengthCandidate)
+      ? parseInt(binaryLengthCandidate, 10)
+      : parseInt(binaryLengthCandidate, 16);
     const availableDataLength = message.length - pos - 4;
 
     if (
@@ -788,7 +814,9 @@ function parseVariableLengthPrefix(
 
   if (digits === 3) {
     const binaryLengthCandidate = message.substring(pos, pos + 4);
-    const binaryLength = parseInt(binaryLengthCandidate, 16);
+    const binaryLength = /^[0-9]{4}$/.test(binaryLengthCandidate)
+      ? parseInt(binaryLengthCandidate, 10)
+      : parseInt(binaryLengthCandidate, 16);
     const availableDataLength = message.length - pos - 4;
 
     if (
@@ -1617,23 +1645,46 @@ export function createISO8583(
  * Validate ISO 8583 message structure
  */
 export function validateISO8583(
-  message: string
+  message: string,
+  options?: {
+    hasLengthPrefix?: boolean;
+    hasTPDU?: boolean;
+    tpduLength?: number;
+  }
 ): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   const cleanHex = message.replace(/\s/g, '');
+  let pos = 0;
 
-  if (cleanHex.length < 20) {
+  if (options?.hasLengthPrefix) {
+    const lengthPrefix = cleanHex.substring(pos, pos + 4);
+    if (!/^[0-9A-Fa-f]{4}$/.test(lengthPrefix)) {
+      errors.push('Invalid length prefix format');
+    }
+    pos += 4;
+  }
+
+  if (options?.hasTPDU) {
+    const tpduLength = options.tpduLength || 5;
+    const tpdu = cleanHex.substring(pos, pos + tpduLength * 2);
+    if (!/^[0-9A-Fa-f]+$/.test(tpdu) || tpdu.length !== tpduLength * 2) {
+      errors.push('Invalid TPDU format');
+    }
+    pos += tpduLength * 2;
+  }
+
+  if (cleanHex.length < pos + 20) {
     errors.push('Message too short');
   }
 
   // Check MTI format
-  const mti = cleanHex.substring(0, 4);
+  const mti = cleanHex.substring(pos, pos + 4);
   if (!/^[0-9A-Fa-f]{4}$/.test(mti)) {
     errors.push('Invalid MTI format');
   }
 
   // Check bitmap format
-  const bitmap = cleanHex.substring(4, 20);
+  const bitmap = cleanHex.substring(pos + 4, pos + 20);
   if (!/^[0-9A-Fa-f]{16}$/.test(bitmap)) {
     errors.push('Invalid bitmap format');
   }

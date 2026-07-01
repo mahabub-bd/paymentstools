@@ -572,6 +572,7 @@ const binaryToBCDDecode = (binary: string): {
 
 const converters = [
   { id: 'hex-ascii', name: 'Hex ↔ ASCII', icon: '🔤' },
+  { id: 'ascii-hex', name: 'ASCII → Hex', icon: '🔡' },
   { id: 'ebcdic', name: 'EBCDIC ↔ ASCII', icon: '💾' },
   { id: 'hex-dec', name: 'Hex ↔ Decimal', icon: '🔢' },
   { id: 'bcd', name: 'BCD Converter', icon: '🔟' },
@@ -653,6 +654,9 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
             setResult(asciiToHexDetailed(input));
           }
           break;
+        case 'ascii-hex':
+          setResult(asciiToHexDetailed(input));
+          break;
         case 'xor':
           if (!input2) {
             setResult({ error: 'Please enter both values for XOR calculation' });
@@ -728,6 +732,10 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
     switch (activeConverter) {
       case 'hex-ascii':
         setInput('3132333435363738393031323334');
+        setInput2('');
+        break;
+      case 'ascii-hex':
+        setInput('Hello World!');
         setInput2('');
         break;
       case 'ebcdic':
@@ -811,6 +819,36 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
                 )}
               </>
             )}
+          </div>
+        );
+
+      case 'ascii-hex':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">
+                Enter ASCII Text
+              </label>
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Enter ASCII text (e.g., Hello World!)"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 min-h-[100px]"
+                rows={4}
+              />
+            </div>
+            {result && (
+              <>
+                <ConverterResult label="Hex Output" value={result.hex} isMain />
+                <ConverterResult label="Character Details" value={result.details} />
+              </>
+            )}
+            <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <p className="text-xs text-green-700 dark:text-green-400">
+                <strong>ASCII → Hex</strong> converts each character to its hexadecimal representation.
+                <br />Example: "A" → 0x41, "AB" → 41 42
+              </p>
+            </div>
           </div>
         );
 
@@ -1194,7 +1232,7 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
-          Payment System Converters
+          Data Format Converters
         </h1>
         <p className="text-slate-600 dark:text-slate-400 text-sm">
           Hex, ASCII, EBCDIC, Binary, Decimal, Base64 converters for payment systems
@@ -1252,6 +1290,10 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
           <div>
             <p className="font-medium text-slate-600 dark:text-slate-400 mb-1">Hex ↔ ASCII</p>
             <p className="text-slate-500 dark:text-slate-500">Convert between hexadecimal and ASCII text (e.g., "313233" ↔ "123")</p>
+          </div>
+          <div>
+            <p className="font-medium text-slate-600 dark:text-slate-400 mb-1">ASCII → Hex</p>
+            <p className="text-slate-500 dark:text-slate-500">Convert ASCII text to hexadecimal with character breakdown (e.g., "A" → "41")</p>
           </div>
           <div>
             <p className="font-medium text-slate-600 dark:text-slate-400 mb-1">EBCDIC ↔ ASCII</p>
