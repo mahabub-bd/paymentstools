@@ -50,11 +50,14 @@ export const HomePageTools = ({ menuItems, loaded }: HomePageToolsProps) => {
         }
         .animate-tool-card-entrance {
           animation: tool-card-entrance 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
+          pointer-events: auto !important;
         }
         .tool-card {
           backdrop-filter: blur(10px);
           -webkit-backdrop-filter: blur(10px);
-          will-change: transform;
+          pointer-events: auto;
+          position: relative;
+          z-index: 1;
         }
         .tool-card:hover .tool-card-shine {
           animation: tool-shine 0.8s ease;
@@ -78,7 +81,7 @@ export const HomePageTools = ({ menuItems, loaded }: HomePageToolsProps) => {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2.5">
+        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2.5 relative z-10">
           {menuItems.map((item, index) => (
             <Link
               key={item.id}

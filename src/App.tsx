@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react'
 import { Analytics } from '@vercel/analytics/react'
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import './App.css'
 

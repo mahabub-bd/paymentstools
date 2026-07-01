@@ -26,7 +26,7 @@ const HomePage = () => {
       <HomePageDecorations loaded={loaded} />
 
       {/* Content wrapper with z-index */}
-      <div className="relative z-10">
+      <div className="relative z-10 pointer-events-auto">
         {/* Hero Section */}
         <HomePageHero loaded={loaded} />
 
