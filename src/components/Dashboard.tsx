@@ -45,6 +45,7 @@ const TsiDecoder = lazy(() => import('./TsiDecoder'));
 const KnowledgeBase = lazy(() => import('./KnowledgeBase'));
 const IssuerEmvTestKeys = lazy(() => import('./IssuerEmvTestKeys'));
 const AidList = lazy(() => import('./AidList'));
+const NdcParser = lazy(() => import('./NdcParser'));
 
 const ToolFallback = () => (
   <div className="w-full bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-lg p-6">
@@ -290,6 +291,7 @@ const Dashboard = () => {
                 <Route path="/paymentkeys" element={<PaymentKeysReference />} />
                 <Route path="/emvtestkeys" element={<IssuerEmvTestKeys />} />
                 <Route path="/knowledgebase" element={<KnowledgeBase />} />
+                <Route path="/ndcparser" element={<NdcParser />} />
               </Routes>
             </Suspense>
           </div>

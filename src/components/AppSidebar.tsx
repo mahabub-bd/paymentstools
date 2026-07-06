@@ -7,6 +7,7 @@ interface MenuItem {
   label: string;
   icon: string;
   category: string;
+  group?: string;
   description: string;
   shortcut: string;
 }
@@ -215,6 +216,15 @@ export const AppSidebar = ({
           const isActiveCategory = activeCategoryId === catId;
           const accent = categoryAccent[category.color] || categoryAccent.slate;
           const textColor = categoryText[category.color] || categoryText.slate;
+          const itemGroups = items.reduce<Record<string, MenuItem[]>>((groups, item) => {
+            const groupName = item.group || 'Tools';
+            if (!groups[groupName]) {
+              groups[groupName] = [];
+            }
+            groups[groupName].push(item);
+            return groups;
+          }, {});
+          const showGroupLabels = isOpen || isMobile;
 
           return (
             <div key={catId} className="mb-2">
@@ -243,42 +253,51 @@ export const AppSidebar = ({
                 )}
               </button>
 
-              {!isCollapsed && items.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleMenuClick(item.id)}
-                  className={`relative w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors group ${activeMenu === item.id
-                    ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-200'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-900 dark:hover:text-slate-100'
-                    }`}
-                  title={`${item.label} (${item.shortcut})`}
-                >
-                  {activeMenu === item.id && (
-                    <span className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full ${accent}`} />
-                  )}
-                  <span className={`w-8 h-8 rounded-md flex items-center justify-center text-base ${activeMenu === item.id ? 'bg-white dark:bg-zinc-900 shadow-sm' : 'bg-slate-100 dark:bg-zinc-900'
-                    }`}>
-                    {item.icon}
-                  </span>
-                  {(isOpen || isMobile) && (
-                    <div className="flex-1 text-left min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-sm truncate">{item.label}</span>
-                        {!isMobile && (
-                          <kbd className={`ml-2 inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono rounded ${activeMenu === item.id
-                            ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
-                            : 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400'
-                            }`}>
-                            {item.shortcut}
-                          </kbd>
-                        )}
-                      </div>
-                      <p className="text-[11px] truncate text-slate-400 dark:text-zinc-500">
-                        {item.description}
-                      </p>
+              {!isCollapsed && Object.entries(itemGroups).map(([groupName, groupItems]) => (
+                <div key={groupName} className={showGroupLabels ? 'mt-1 first:mt-0' : ''}>
+                  {showGroupLabels && (
+                    <div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-zinc-600">
+                      {groupName}
                     </div>
                   )}
-                </button>
+                  {groupItems.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => handleMenuClick(item.id)}
+                      className={`relative w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors group ${activeMenu === item.id
+                        ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-200'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-900 dark:hover:text-slate-100'
+                        }`}
+                      title={`${item.label} (${item.shortcut})`}
+                    >
+                      {activeMenu === item.id && (
+                        <span className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full ${accent}`} />
+                      )}
+                      <span className={`w-8 h-8 rounded-md flex items-center justify-center text-base ${activeMenu === item.id ? 'bg-white dark:bg-zinc-900 shadow-sm' : 'bg-slate-100 dark:bg-zinc-900'
+                        }`}>
+                        {item.icon}
+                      </span>
+                      {(isOpen || isMobile) && (
+                        <div className="flex-1 text-left min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="font-semibold text-sm truncate">{item.label}</span>
+                            {!isMobile && (
+                              <kbd className={`ml-2 inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono rounded ${activeMenu === item.id
+                                ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
+                                : 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400'
+                                }`}>
+                                {item.shortcut}
+                              </kbd>
+                            )}
+                          </div>
+                          <p className="text-[11px] truncate text-slate-400 dark:text-zinc-500">
+                            {item.description}
+                          </p>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
               ))}
             </div>
           );
