@@ -1,8 +1,8 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import CryptoJS from 'crypto-js';
 import { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { pinBlockSchema, defaultValues } from '../utils/validation';
+import { defaultValues, pinBlockSchema } from '../utils/validation';
 
 type PinBlockResult = {
   pan: string;

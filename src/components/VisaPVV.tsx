@@ -88,8 +88,8 @@ const VisaPVV = ({ className = '' }: { className?: string }) => {
       const normalizedPvkIndex = cleanPvkIndex.length === 1 ? '00000' + cleanPvkIndex : cleanPvkIndex;
 
       // Step 1: Build Transformed Security Parameter (TSP)
-      // Format: PAN|11 (11 rightmost digits excluding check digit) + PVKI (1 hex digit) + PIN
-      // For PANs with 18+ digits, exclude the leftmost 2 digits to get the "middle" 11
+      // Visa PVV Format: PVKI (1 nibble) + PIN length (1 nibble) + PIN (up to 12 nibbles) + 11 rightmost PAN digits
+      // Total: 64 bits (16 nibbles)
       const panWithoutCheck = cleanPan.slice(0, -1); // Remove check digit
       let panRight11: string;
       if (panWithoutCheck.length > 16) {
@@ -101,9 +101,12 @@ const VisaPVV = ({ className = '' }: { className?: string }) => {
       }
       const pvki = normalizedPvkIndex.slice(-1); // Last 1 digit of PVK index (1 nibble)
 
-      // Build TSP (64 bits / 16 nibbles) = PAN|11 + PVKI + PIN
-      const tspData = panRight11 + pvki + cleanPin;
-      const tspHex = tspData.padEnd(16, 'F').substring(0, 16); // 16 nibbles, pad with F if needed
+      // Build TSP (64 bits / 16 nibbles) = 11 PAN digits + PVKI + PIN length + PIN
+      // Alternative Visa PVV format: PAN (11 nibbles) + PVKI (1 nibble) + PIN length (1 nibble) + PIN (up to 12 nibbles)
+      const pinLengthNibble = (cleanPin.length * 2).toString(16).toUpperCase();
+      // Combine: PAN (11 nibbles) + PVKI (1 nibble) + PIN length (1 nibble) + PIN (4 nibbles)
+      const tspData = panRight11 + pvki + pinLengthNibble + cleanPin;
+      const tspHex = tspData.substring(0, 16); // Take first 16 nibbles (64 bits)
 
       // Step 2: Encrypt TSP with PVK using Triple DES (2-key) in ECB mode
       const tspDataForEncrypt = CryptoJS.enc.Hex.parse(tspHex);
@@ -385,9 +388,11 @@ const VisaPVV = ({ className = '' }: { className?: string }) => {
             <div>
               <p className="text-cyan-400 font-semibold mb-1">Step 1: Build Transformed Security Parameter (TSP)</p>
               <div className="font-mono text-slate-400 space-y-1">
-                <div>Format: PVKI (2) + PIN Length (2) + PIN + 11 rightmost PAN digits</div>
-                <div>PVVKI: <span className="text-yellow-400">{result.pvkIndex.substring(4)}</span></div>
-                <div>PIN Length: <span className="text-yellow-400">{result.pinLength} digits</span></div>
+                <div>Format: 11 PAN digits + PVKI (1 nibble) + PIN Length (1 nibble) + PIN</div>
+                <div>11 rightmost PAN: <span className="text-yellow-400">{result.pan.slice(0, -1).slice(-11)}</span></div>
+                <div>PVKI: <span className="text-yellow-400">{result.pvkIndex.substring(4)}</span></div>
+                <div>PIN Length: <span className="text-yellow-400">0x{(result.pinLength * 2).toString(16).toUpperCase()}</span></div>
+                <div>PIN: <span className="text-yellow-400">{'•'.repeat(result.pinLength)}</span></div>
                 <div>TSP: <span className="text-green-400">{formatHex(result.tsp)}</span></div>
               </div>
             </div>

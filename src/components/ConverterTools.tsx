@@ -635,10 +635,21 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
   const [xorMode, setXorMode] = useState<'hex' | 'binary' | 'decimal'>('hex');
   const [result, setResult] = useState<any>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [xorShouldCalculate, setXorShouldCalculate] = useState(false); // Trigger for XOR calculation
 
   // Convert based on active converter
   const convert = useCallback(() => {
-    if (!input) {
+    // Skip auto-conversion for XOR mode
+    if (activeConverter === 'xor') {
+      if (!xorShouldCalculate) {
+        setResult(null);
+        return;
+      }
+      // Reset the trigger after use
+      setXorShouldCalculate(false);
+    }
+
+    if (!input && activeConverter !== 'xor') {
       setResult(null);
       return;
     }
@@ -658,7 +669,7 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
           setResult(asciiToHexDetailed(input));
           break;
         case 'xor':
-          if (!input2) {
+          if (!input || !input2) {
             setResult({ error: 'Please enter both values for XOR calculation' });
             break;
           }
@@ -720,7 +731,7 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
     } catch (err) {
       setResult({ error: (err as Error).message });
     }
-  }, [activeConverter, input, input2, xorMode]);
+  }, [activeConverter, input, input2, xorMode, xorShouldCalculate]);
 
   // Auto-convert on input change
   React.useEffect(() => {
@@ -1046,7 +1057,7 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
             {/* Mode Selector */}
             <div className="flex gap-2">
               <button
-                onClick={() => { setXorMode('hex'); setInput(''); setInput2(''); setResult(null); }}
+                onClick={() => { setXorMode('hex'); setInput(''); setInput2(''); setResult(null); setXorShouldCalculate(false); }}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                   xorMode === 'hex'
                     ? 'bg-blue-600 text-white'
@@ -1056,7 +1067,7 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
                 Hex XOR
               </button>
               <button
-                onClick={() => { setXorMode('binary'); setInput(''); setInput2(''); setResult(null); }}
+                onClick={() => { setXorMode('binary'); setInput(''); setInput2(''); setResult(null); setXorShouldCalculate(false); }}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                   xorMode === 'binary'
                     ? 'bg-blue-600 text-white'
@@ -1066,7 +1077,7 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
                 Binary XOR
               </button>
               <button
-                onClick={() => { setXorMode('decimal'); setInput(''); setInput2(''); setResult(null); }}
+                onClick={() => { setXorMode('decimal'); setInput(''); setInput2(''); setResult(null); setXorShouldCalculate(false); }}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                   xorMode === 'decimal'
                     ? 'bg-blue-600 text-white'
@@ -1124,6 +1135,14 @@ const ConverterTools = ({ className = '' }: { className?: string }) => {
                 />
               </div>
             </div>
+
+            {/* Calculate Button */}
+            <button
+              onClick={() => setXorShouldCalculate(true)}
+              className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium"
+            >
+              Calculate
+            </button>
 
             {/* Results */}
             {result && (
